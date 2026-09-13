@@ -1,0 +1,159 @@
+---
+interface Props {
+  number: string;
+  title: string;
+  authors?: string[];
+  date?: Date;
+  type: string;
+  status: 'Draft' | 'Preprint' | 'Published';
+  abstract: string;
+  pdfUrl?: string;
+  arxivUrl?: string;
+  githubUrl?: string;
+  doi?: string;
+}
+
+const {
+  number,
+  title,
+  authors = [],
+  date,
+  type,
+  status,
+  abstract,
+  pdfUrl,
+  arxivUrl,
+  githubUrl,
+  doi,
+} = Astro.props;
+
+const formattedDate = date
+  ? new Intl.DateTimeFormat('en-GB', {
+      year: 'numeric',
+      month: 'long',
+    }).format(date)
+  : null;
+
+const outbound = [
+  pdfUrl ? { label: 'PDF', href: pdfUrl } : null,
+  arxivUrl ? { label: 'arXiv', href: arxivUrl } : null,
+  githubUrl ? { label: 'GitHub', href: githubUrl } : null,
+  doi ? { label: `DOI ${doi}`, href: `https://doi.org/${doi}` } : null,
+].filter((x): x is { label: string; href: string } => x !== null);
+---
+
+<article class="report">
+  <div class="report__meta">
+    <p class="meta report__number">{number}</p>
+    <p class="meta">{type}</p>
+    <p>
+      <span class={status === 'Draft' ? 'badge badge--draft' : 'badge'}>
+        {status}
+      </span>
+    </p>
+  </div>
+
+  <div class="report__body">
+    <h3 class="h-sub report__title">{title}</h3>
+
+    <p class="meta report__byline">
+      {authors.length > 0 ? authors.join(', ') : 'Authors to be confirmed'}
+      {formattedDate ? ` · ${formattedDate}` : ' · Date to be confirmed'}
+    </p>
+
+    <p class="report__abstract">{abstract}</p>
+
+    {
+      outbound.length > 0 ? (
+        <ul class="list-plain report__links">
+          {outbound.map((l) => (
+            <li>
+              <a class="link" href={l.href} rel="noopener">
+                {l.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="report__nolinks">
+          <span class="placeholder">
+            <span aria-hidden="true">◇</span>
+            No PDF, arXiv, GitHub or DOI link yet
+          </span>
+        </p>
+      )
+    }
+  </div>
+</article>
+
+<style>
+  .report {
+    display: grid;
+    grid-template-columns: 11rem minmax(0, 1fr);
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+    padding-block: clamp(1.5rem, 3vw, 2.25rem);
+    align-items: start;
+  }
+
+  .report__meta {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .report__meta p {
+    margin: 0;
+  }
+
+  .report__number {
+    color: var(--ink);
+    letter-spacing: 0.06em;
+  }
+
+  .report__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.7rem;
+  }
+
+  .report__title {
+    margin: 0;
+    max-width: 34ch;
+  }
+
+  .report__byline {
+    margin: 0;
+  }
+
+  .report__abstract {
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    max-width: 68ch;
+  }
+
+  .report__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.1rem;
+    font-size: 0.875rem;
+    margin-top: 0.2rem;
+  }
+
+  .report__nolinks {
+    margin-top: 0.2rem;
+  }
+
+  @media (max-width: 700px) {
+    .report {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+    }
+
+    .report__meta {
+      flex-direction: row;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem;
+    }
+  }
+</style>

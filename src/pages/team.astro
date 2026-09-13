@@ -1,0 +1,247 @@
+---
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import { RESEARCH_AREAS } from '../data/research-areas';
+import LinkOrPlaceholder from '../components/LinkOrPlaceholder.astro';
+import { LINKS } from '../data/site';
+
+const people = (await getCollection('team')).filter((p) => p.data.listed);
+
+const rendered = await Promise.all(
+  people.map(async (entry) => ({
+    entry,
+    Content: (await render(entry)).Content,
+  }))
+);
+
+/** Leadership first, then members, then any custom group alphabetically. */
+const GROUP_ORDER = ['Centre lead', 'Centre member'];
+const groupRank = (g: string) => {
+  const i = GROUP_ORDER.indexOf(g);
+  return i === -1 ? GROUP_ORDER.length : i;
+};
+
+const groups = new Map<string, typeof rendered>();
+for (const item of rendered) {
+  const key = item.entry.data.group;
+  const bucket = groups.get(key);
+  if (bucket) bucket.push(item);
+  else groups.set(key, [item]);
+}
+
+const orderedGroups = [...groups.entries()]
+  .sort(([a], [b]) => groupRank(a) - groupRank(b) || a.localeCompare(b))
+  .map(
+    ([label, items]) =>
+      [
+        label,
+        items.sort(
+          (x, y) =>
+            x.entry.data.order - y.entry.data.order ||
+            x.entry.data.name.localeCompare(y.entry.data.name)
+        ),
+      ] as const
+  );
+
+/** Only worth showing group headings once there is more than one group. */
+const showGroupHeadings = orderedGroups.length > 1;
+
+const areaTitle = (id: string) =>
+  RESEARCH_AREAS.find((a) => a.id === id)?.title ?? id;
+
+type PersonData = (typeof people)[number]['data'];
+
+const linksFor = (d: PersonData) =>
+  [
+    d.profileUrl ? { label: 'Staff profile', href: d.profileUrl } : null,
+    d.website ? { label: 'Website', href: d.website } : null,
+    d.email ? { label: 'Email', href: `mailto:${d.email}` } : null,
+    d.orcid ? { label: 'ORCID', href: `https://orcid.org/${d.orcid}` } : null,
+    d.scholar ? { label: 'Scholar', href: d.scholar } : null,
+    d.github ? { label: 'GitHub', href: d.github } : null,
+    d.linkedin ? { label: 'LinkedIn', href: d.linkedin } : null,
+  ].filter((x): x is { label: string; href: string } => x !== null);
+
+---
+
+<BaseLayout
+  title="Team"
+  description="People working across DAIM's research areas at the University of Hull — artificial intelligence, data science, mathematical modelling and their applications."
+>
+  <PageHeader
+    eyebrow="Team"
+    title="People"
+    lede="Researchers working across DAIM's themes, from AI methods through to health, humanities, natural science and engineering."
+  />
+
+  <section class="section">
+    <div class="container">
+      {
+        rendered.length > 0 ? (
+          <>
+            {orderedGroups.map(([label, items]) => (
+              <section class="people-group">
+                {showGroupHeadings && (
+                  <h2 class="people-group__title meta">{label}</h2>
+                )}
+                <div class="grid grid--hairline grid--3">
+                  {items.map(({ entry, Content }) => {
+                    const links = linksFor(entry.data);
+                    return (
+                      <article class="person" id={entry.id}>
+                        <div class="person__head">
+                          {entry.data.photo && (
+                            <Image
+                              class="person__photo"
+                              src={entry.data.photo}
+                              alt=""
+                              width={144}
+                              height={144}
+                              loading="lazy"
+                            />
+                          )}
+                          <div class="person__ident">
+                            <h3 class="h-sub person__name">
+                              {entry.data.name}
+                            </h3>
+                            {entry.data.role && (
+                              <p class="meta person__role">{entry.data.role}</p>
+                            )}
+                            {entry.data.unit && (
+                              <p class="person__unit">{entry.data.unit}</p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div class="prose person__bio">
+                          <Content />
+                        </div>
+
+                        {(entry.data.areas.length > 0 ||
+                          entry.data.topics.length > 0) && (
+                          <ul class="tags person__tags">
+                            {entry.data.areas.map((a) => (
+                              <li class="tag">{areaTitle(a)}</li>
+                            ))}
+                            {entry.data.topics.map((t) => (
+                              <li class="tag">{t}</li>
+                            ))}
+                          </ul>
+                        )}
+
+                        {links.length > 0 && (
+                          <ul class="list-plain person__links">
+                            {links.map((l) => (
+                              <li>
+                                <a class="link" href={l.href} rel="noopener">
+                                  {l.label}
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </article>
+                    );
+                  })}
+                </div>
+              </section>
+            ))}
+          </>
+        ) : (
+          <div class="empty-state">
+            <div class="prose">
+              <p>
+                Full list of members can be found here:{' '}
+                <LinkOrPlaceholder
+                  link={LINKS.officialPage}
+                  class="link"
+                  label="University of Hull DAIM page"
+                />
+              </p>
+            </div>
+          </div>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+
+  .people-group + .people-group {
+    margin-top: 3rem;
+  }
+
+  .people-group__title {
+    text-transform: uppercase;
+    letter-spacing: 0.13em;
+    font-size: 0.6875rem;
+    font-weight: 400;
+    color: var(--ink-3);
+    padding-bottom: 0.6rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid var(--ink);
+  }
+
+  .person {
+    background: var(--paper);
+    padding: clamp(1.35rem, 2.4vw, 1.75rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    scroll-margin-top: calc(var(--header-h) + 1.5rem);
+  }
+
+  .person__head {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.9rem;
+  }
+
+  .person__photo {
+    flex: 0 0 auto;
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border: 1px solid var(--rule);
+    background: var(--paper-alt);
+  }
+
+  .person__ident {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    min-width: 0;
+  }
+
+  .person__name,
+  .person__role,
+  .person__unit {
+    margin: 0;
+  }
+
+  .person__unit {
+    font-size: 0.875rem;
+    color: var(--ink-2);
+  }
+
+  .person__bio {
+    font-size: 0.9375rem;
+  }
+
+  .person__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.9rem;
+    font-size: 0.8125rem;
+  }
+
+  .empty-state {
+    border: 1px dashed var(--rule-strong);
+    padding: clamp(1.75rem, 4vw, 2.75rem);
+    max-width: 62ch;
+  }
+
+</style>

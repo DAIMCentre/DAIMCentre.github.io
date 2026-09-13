@@ -1,0 +1,284 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import { RESEARCH_AREAS } from '../data/research-areas';
+
+const projects = (await getCollection('projects'))
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => a.data.order - b.data.order);
+
+const projectsFor = (areaId: string) =>
+  projects.filter((p) => p.data.areas.includes(areaId));
+---
+
+<BaseLayout
+  title="Research"
+  description="DAIM's research themes: Frontier AI, AI for Health, AI for Humanities, AI for Natural Science and AI for Engineering Science."
+>
+  <PageHeader
+    eyebrow="Research"
+    title="Research themes"
+    lede="Frontier AI covers the methods. The other four are the domains we put them to work in. Most of what we do sits across more than one, and we expect this list to grow."
+  />
+
+  <!-- index -->
+  <section class="section">
+    <div class="container">
+      <ol class="area-index">
+        {
+          RESEARCH_AREAS.map((area, i) => (
+            <li class="area-index__item">
+              <a class="area-index__link" href={`#${area.id}`}>
+                <span class="meta area-index__num">
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <span class="area-index__title">
+                  <span class="h-emoji" aria-hidden="true">
+                    {area.emoji}
+                  </span>
+                  {area.title}
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ol>
+
+      <div class="areas">
+        {
+          RESEARCH_AREAS.map((area, i) => {
+            const related = projectsFor(area.id);
+            return (
+              <article class="area-detail" id={area.id}>
+                <div class="area-detail__aside">
+                  <p class="meta area-detail__num">
+                    {String(i + 1).padStart(2, '0')}
+                  </p>
+                  <ul class="tags area-detail__tags">
+                    {area.topics.map((t) => (
+                      <li class="tag">{t}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div class="area-detail__body">
+                  <h2 class="h-section area-detail__title">
+                    <span class="h-emoji" aria-hidden="true">
+                      {area.emoji}
+                    </span>
+                    {area.title}
+                  </h2>
+
+                  <p class="lede">{area.summary}</p>
+
+                  <div class="prose area-detail__prose">
+                    {area.detail.map((para) => (
+                      <p>{para}</p>
+                    ))}
+                  </div>
+
+                  {related.length > 0 && (
+                    <div class="area-detail__projects">
+                      <p class="meta area-detail__projects-label">
+                        Related work
+                      </p>
+                      <ul class="list-plain area-detail__projects-list">
+                        {related.map((p) => (
+                          <li>
+                            <a class="link" href={`/projects#${p.id}`}>
+                              {p.data.title}
+                            </a>
+                            <span class="meta"> · {p.data.status}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </article>
+            );
+          })
+        }
+      </div>
+    </div>
+  </section>
+
+  <!-- room to grow -->
+  <section class="section section--alt section--ruled">
+    <div class="container"><div class="measure">
+      <h2 class="h-section">How themes get added</h2>
+      <div class="prose stack-md" style="margin-top:1.25rem">
+        <p>
+          This list will change. Themes tend to start much smaller than they
+          end up: someone brings a paper to a seminar and it will not leave
+          people alone, or a conversation with another group turns into a
+          problem neither side can solve by itself.
+        </p>
+        <p>
+          We add one here once there is enough work behind it to describe it
+          honestly, and it shows up on the
+          <a class="link" href="/projects">projects</a> page at the same time.
+          Before that it is just a conversation, which is fine.
+        </p>
+      </div>
+    </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .area-index {
+    display: grid;
+    /* One track per theme, so adding or removing one needs no CSS change. */
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    list-style: none;
+    margin: 0 0 clamp(2.5rem, 5vw, 4rem);
+    padding: 0;
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .area-index__item + .area-index__item {
+    border-left: 1px solid var(--rule);
+  }
+
+  .area-index__link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding: 1rem clamp(0.75rem, 1.5vw, 1.25rem);
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+  }
+
+  .area-index__item:first-child .area-index__link {
+    padding-left: 0;
+  }
+
+  .area-index__link:hover {
+    background: var(--paper-alt);
+  }
+
+  .area-index__num {
+    color: var(--ink-4);
+  }
+
+  .area-index__title {
+    font-size: 0.9375rem;
+    color: var(--ink);
+  }
+
+  @media (max-width: 900px) {
+    .area-index {
+      grid-auto-flow: row;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .area-index__item:nth-child(2n + 1) {
+      border-left: 0;
+    }
+    .area-index__item:nth-child(2n + 1) .area-index__link {
+      padding-left: 0;
+    }
+    .area-index__item:nth-child(n + 3) {
+      border-top: 1px solid var(--rule);
+    }
+    /* An odd number of themes would otherwise strand the last one beside an
+       empty half-row. Let it run the full width instead. */
+    .area-index__item:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* Phones: "AI for Engineering Science" cannot sit in a half-width cell
+     without wrapping to three lines, so drop to a single column. */
+  @media (max-width: 560px) {
+    .area-index {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .area-index__item + .area-index__item {
+      border-left: 0;
+      border-top: 1px solid var(--rule);
+    }
+    .area-index__item .area-index__link {
+      padding-left: 0;
+    }
+  }
+
+  .areas {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .area-detail {
+    display: grid;
+    grid-template-columns: 13rem minmax(0, 1fr);
+    gap: clamp(1.5rem, 4vw, 3.5rem);
+    padding-block: clamp(2.25rem, 4vw, 3.25rem);
+    border-top: 1px solid var(--rule);
+    scroll-margin-top: calc(var(--header-h) + 1.5rem);
+  }
+
+  .area-detail:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .area-detail__aside {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .area-detail__num {
+    margin: 0;
+    color: var(--ink-4);
+    font-size: 0.875rem;
+  }
+
+  .area-detail__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .area-detail__title {
+    margin: 0;
+  }
+
+  .area-detail__prose {
+    margin-top: 0.25rem;
+  }
+
+  .area-detail__projects {
+    margin-top: 0.75rem;
+    border-top: 1px solid var(--rule);
+    padding-top: 1rem;
+  }
+
+  .area-detail__projects-label {
+    margin: 0 0 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    font-size: 0.6875rem;
+  }
+
+  .area-detail__projects-list li {
+    margin-bottom: 0.35rem;
+    font-size: 0.9375rem;
+  }
+
+  @media (max-width: 820px) {
+    .area-detail {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.25rem;
+    }
+    .area-detail__aside {
+      flex-direction: row;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+  }
+</style>

@@ -1,0 +1,304 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import LinkOrPlaceholder from '../components/LinkOrPlaceholder.astro';
+import { RESEARCH_AREAS } from '../data/research-areas';
+import { LINKS } from '../data/site';
+
+const entries = (await getCollection('publications'))
+  .filter((p) => !p.data.draft)
+  .sort(
+    (a, b) =>
+      b.data.year - a.data.year ||
+      a.data.title.localeCompare(b.data.title)
+  );
+
+/** Group by year, newest first. */
+const groups = new Map<number, typeof entries>();
+for (const e of entries) {
+  const bucket = groups.get(e.data.year);
+  if (bucket) bucket.push(e);
+  else groups.set(e.data.year, [e]);
+}
+const orderedGroups = [...groups.entries()].sort(([a], [b]) => b - a);
+
+const areaTitle = (id: string) =>
+  RESEARCH_AREAS.find((a) => a.id === id)?.title ?? id;
+
+const types = [...new Set(entries.map((e) => e.data.type))].sort();
+
+type PubData = (typeof entries)[number]['data'];
+
+const linksFor = (d: PubData) =>
+  [
+    d.doi ? { label: 'DOI', href: `https://doi.org/${d.doi}` } : null,
+    d.url ? { label: 'Publisher', href: d.url } : null,
+    d.arxivUrl ? { label: 'arXiv', href: d.arxivUrl } : null,
+    d.pdfUrl ? { label: 'PDF', href: d.pdfUrl } : null,
+    d.codeUrl ? { label: 'Code', href: d.codeUrl } : null,
+  ].filter((x): x is { label: string; href: string } => x !== null);
+
+/**
+ * Split the author list so DAIM-affiliated names can be emphasised, which is
+ * the normal convention for a centre publication list.
+ */
+const authorParts = (d: PubData) =>
+  d.authors.map((name) => ({
+    name,
+    isDaim: d.daimAuthors.includes(name),
+  }));
+---
+
+<BaseLayout
+  title="Publications"
+  description="Peer-reviewed papers, conference papers and preprints from researchers at DAIM, the Centre of Excellence for Data Science, Artificial Intelligence and Modelling, University of Hull."
+>
+  <PageHeader
+    eyebrow="Publications"
+    title="Publications"
+    lede="Papers, conference contributions and preprints from researchers working with DAIM."
+  />
+
+  <section class="section">
+    <div class="container">
+      {
+        entries.length > 0 ? (
+          <>
+            <div class="pub-meta">
+              <div>
+                <p class="meta pub-meta__label">Entries</p>
+                <p class="pub-meta__value">{entries.length}</p>
+              </div>
+              <div>
+                <p class="meta pub-meta__label">Years</p>
+                <p class="pub-meta__value">
+                  {orderedGroups.length > 1
+                    ? `${orderedGroups[orderedGroups.length - 1][0]}–${orderedGroups[0][0]}`
+                    : String(orderedGroups[0][0])}
+                </p>
+              </div>
+              <div>
+                <p class="meta pub-meta__label">Types</p>
+                <p class="pub-meta__value">{types.join(', ')}</p>
+              </div>
+            </div>
+
+            {orderedGroups.map(([year, items]) => (
+              <section class="pub-group">
+                <h2 class="pub-group__title meta">{year}</h2>
+                <ul class="list-plain pub-list">
+                  {items.map((e) => {
+                    const links = linksFor(e.data);
+                    const authors = authorParts(e.data);
+                    return (
+                      <li class="pub" id={e.id}>
+                        <div class="pub__aside">
+                          <p class="meta">{e.data.type}</p>
+                        </div>
+
+                        <div class="pub__body">
+                          <h3 class="h-sub pub__title">{e.data.title}</h3>
+
+                          {authors.length > 0 && (
+                            <p class="pub__authors">
+                              {authors.map((a, i) => (
+                                <>
+                                  {i > 0 && ', '}
+                                  {a.isDaim ? <strong>{a.name}</strong> : a.name}
+                                </>
+                              ))}
+                            </p>
+                          )}
+
+                          {e.data.venue && (
+                            <p class="pub__venue">
+                              {/* kept on one line: a newline here renders as a space before the comma */}
+                              <em>{e.data.venue}</em>{e.data.venueDetail ? `, ${e.data.venueDetail}` : ''}
+                            </p>
+                          )}
+
+                          {e.data.areas.length > 0 && (
+                            <ul class="tags pub__tags">
+                              {e.data.areas.map((a) => (
+                                <li class="tag">{areaTitle(a)}</li>
+                              ))}
+                            </ul>
+                          )}
+
+                          {links.length > 0 && (
+                            <ul class="list-plain pub__links">
+                              {links.map((l) => (
+                                <li>
+                                  <a class="link" href={l.href} rel="noopener">
+                                    {l.label}
+                                  </a>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            ))}
+          </>
+        ) : (
+          <div class="coming-soon">
+            <p class="meta coming-soon__label">Being compiled</p>
+            <h2 class="h-section coming-soon__title">
+              The publication list is not up yet
+            </h2>
+            <div class="prose coming-soon__body">
+              <p>
+                We are putting this together rather than auto-importing it, so
+                that every entry on the page is one someone has checked.
+              </p>
+              <p>
+                In the meantime, publications by DAIM researchers are listed on
+                the{' '}
+                <LinkOrPlaceholder
+                  link={LINKS.officialPage}
+                  class="link"
+                  label="University of Hull DAIM page"
+                />
+                .
+              </p>
+            </div>
+          </div>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .pub-meta {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .pub-meta p {
+    margin: 0;
+  }
+
+  .pub-meta__label {
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    font-size: 0.6875rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .pub-meta__value {
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    color: var(--ink);
+  }
+
+  .pub-group {
+    margin-top: 2.5rem;
+  }
+
+  .pub-group__title {
+    text-transform: uppercase;
+    letter-spacing: 0.13em;
+    font-size: 0.6875rem;
+    font-weight: 400;
+    color: var(--ink-3);
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pub {
+    display: grid;
+    grid-template-columns: 11rem minmax(0, 1fr);
+    gap: clamp(1.25rem, 3vw, 2.5rem);
+    padding-block: clamp(1.5rem, 3vw, 2rem);
+    border-bottom: 1px solid var(--rule);
+    align-items: start;
+    scroll-margin-top: calc(var(--header-h) + 1.5rem);
+  }
+
+  .pub__aside p {
+    margin: 0;
+  }
+
+  .pub__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .pub__title {
+    margin: 0;
+    max-width: 46ch;
+  }
+
+  .pub__authors {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    max-width: 68ch;
+  }
+
+  .pub__authors strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  .pub__venue {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+  }
+
+  .pub__tags,
+  .pub__links {
+    margin-top: 0.25rem;
+  }
+
+  .pub__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.1rem;
+    font-size: 0.875rem;
+  }
+
+  .coming-soon {
+    border: 1px dashed var(--rule-strong);
+    padding: clamp(1.75rem, 4vw, 2.75rem);
+    max-width: 62ch;
+  }
+
+  .coming-soon__label {
+    margin: 0 0 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.13em;
+    font-size: 0.6875rem;
+  }
+
+  .coming-soon__title {
+    margin-bottom: 1rem;
+  }
+
+  .coming-soon__body {
+    font-size: 0.9375rem;
+  }
+
+  @media (max-width: 700px) {
+    .pub-meta {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+    }
+    .pub {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.75rem;
+    }
+  }
+</style>

@@ -1,0 +1,247 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import { RESEARCH_AREAS } from '../../data/research-areas';
+
+const entries = (await getCollection('projects'))
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => a.data.order - b.data.order);
+
+const areaTitle = (id: string) =>
+  RESEARCH_AREAS.find((a) => a.id === id)?.title ?? id;
+---
+
+<BaseLayout
+  title="Projects"
+  description="Research projects and programmes at DAIM — status, scope and the open questions behind each one."
+>
+  <PageHeader
+    eyebrow="Projects"
+    title="What we are working on"
+    lede="Generated straight from the project files in the repository, so it only ever shows what exists. Status labels say how mature the research is. They do not mean anything has been deployed or independently validated."
+  />
+
+  <section class="section">
+    <div class="container">
+      {
+        entries.length > 0 ? (
+          <ul class="list-plain projects">
+            {entries.map((entry, i) => (
+              <li class="project" id={entry.id}>
+                <p class="meta project__index">
+                  {String(i + 1).padStart(2, '0')}
+                </p>
+
+                <div class="project__grid">
+                  {entry.data.illustration && (
+                    <div class="project__figure">
+                      <img
+                        src={entry.data.illustration}
+                        alt={entry.data.illustrationAlt ?? ''}
+                        loading="lazy"
+                        decoding="async"
+                        width="640"
+                        height="400"
+                      />
+                    </div>
+                  )}
+
+                  <div class="project__body">
+                    {/* Deliberately not a link: there are no project detail
+                        pages. /projects carries the full write-up. */}
+                    <h2 class="h-section project__title">{entry.data.title}</h2>
+
+                    {entry.data.subtitle && (
+                      <p class="project__subtitle">{entry.data.subtitle}</p>
+                    )}
+
+                    {entry.data.question && (
+                      <p class="project__question">{entry.data.question}</p>
+                    )}
+
+                    <p class="project__summary">{entry.data.summary}</p>
+
+                    {entry.data.currentFocus && (
+                      <p class="project__focus">
+                        <span class="meta project__focuslabel">
+                          Current focus
+                        </span>
+                        {entry.data.currentFocus}
+                      </p>
+                    )}
+
+                    <div class="project__meta">
+                      <span class="badge">{entry.data.status}</span>
+                      {entry.data.topics.map((t) => (
+                        <span class="tag">{t}</span>
+                      ))}
+                    </div>
+
+                    {entry.data.areas.length > 0 && (
+                      <p class="meta project__areas">
+                        {entry.data.areas.map((a, j) => (
+                          <>
+                            {j > 0 && ' · '}
+                            <a class="link-quiet" href={`/research#${a}`}>
+                              {areaTitle(a)}
+                            </a>
+                          </>
+                        ))}
+                      </p>
+                    )}
+
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p class="empty-note">
+            Project listings are in preparation. Nothing goes on this page until
+            we can describe it accurately.
+          </p>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="section section--alt section--ruled">
+    <div class="container">
+      <div class="measure">
+        <h2 class="h-section">Proposing a project</h2>
+        <div class="prose stack-md" style="margin-top:1.25rem">
+          <p>
+            Most projects here started as something much smaller: a question
+            raised in a seminar, or an idea that survived being taken apart.
+          </p>
+          <p>
+            If you are inside DAIM, that is the route. If you are outside it, get
+            in touch and we can talk about it.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .projects {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .project {
+    padding-block: clamp(2.25rem, 4vw, 3.25rem);
+    border-top: 1px solid var(--rule);
+    scroll-margin-top: calc(var(--header-h) + 1.5rem);
+  }
+
+  .project:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .project__index {
+    margin: 0 0 1.25rem;
+    color: var(--ink-4);
+  }
+
+  /* Illustration takes just under 40% on desktop and moves above the text on
+     narrow screens, where a 38% figure would be unreadable. */
+  .project__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 38fr) minmax(0, 62fr);
+    gap: clamp(1.5rem, 4vw, 3rem);
+    align-items: start;
+  }
+
+  .project__figure {
+    border: 1px solid var(--rule);
+    background: var(--paper);
+    padding: clamp(0.75rem, 2vw, 1.25rem);
+  }
+
+  .project__figure img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .project__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    min-width: 0;
+  }
+
+  .project__title {
+    margin: 0;
+    max-width: 26ch;
+  }
+
+  .project__subtitle {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--ink-3);
+    max-width: 52ch;
+  }
+
+  .project__question {
+    margin: 0.5rem 0 0;
+    font-family: var(--font-serif);
+    font-size: clamp(1.05rem, 0.95rem + 0.4vw, 1.25rem);
+    line-height: 1.4;
+    color: var(--ink);
+    border-left: 2px solid var(--ink);
+    padding-left: 1rem;
+    max-width: 44ch;
+  }
+
+  .project__summary {
+    margin: 0.25rem 0 0;
+    color: var(--ink-2);
+    max-width: 62ch;
+  }
+
+  .project__focus {
+    margin: 0;
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    max-width: 62ch;
+  }
+
+  .project__focuslabel {
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    font-size: 0.6875rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .project__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    align-items: center;
+    margin-top: 0.35rem;
+  }
+
+  .project__areas {
+    margin: 0;
+  }
+
+  .project__more {
+    margin: 0.5rem 0 0;
+  }
+
+  @media (max-width: 820px) {
+    .project__grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.5rem;
+    }
+    .project__figure {
+      max-width: 34rem;
+    }
+  }
+</style>

@@ -1,0 +1,505 @@
+---
+import { getCollection } from 'astro:content';
+import { Image } from 'astro:assets';
+import daimBuilding from '../assets/daim-building.jpg';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHead from '../components/SectionHead.astro';
+import ResearchAreaCard from '../components/ResearchAreaCard.astro';
+import ProjectCard from '../components/ProjectCard.astro';
+import ReportEntry from '../components/ReportEntry.astro';
+import { RESEARCH_AREAS } from '../data/research-areas';
+import { PRINCIPLES } from '../data/principles';
+import { FEATURES, SITE } from '../data/site';
+
+const projects = (await getCollection('projects'))
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => a.data.order - b.data.order);
+
+const featured = projects.filter((p) => p.data.featured);
+
+// Only read the collection when the section is actually published.
+// Calling getCollection on an empty collection is harmless but logs a
+// "does not exist or is empty" notice on every build.
+const reports = FEATURES.reports
+  ? (await getCollection('reports')).sort((a, b) => {
+      const at = a.data.date?.getTime() ?? 0;
+      const bt = b.data.date?.getTime() ?? 0;
+      return bt - at || a.data.number.localeCompare(b.data.number);
+    })
+  : [];
+
+/** Table of contents for the page. Each entry links through; the detail
+    lives on the page itself rather than being summarised here. */
+const contents = [
+  { label: 'Research themes', href: '/research' },
+  { label: 'Projects', href: '/projects' },
+  { label: 'Publications', href: '/publications' },
+  // Parked with the Reports section — see FEATURES in src/data/site.ts.
+  ...(FEATURES.reports ? [{ label: 'Research reports', href: '/reports' }] : []),
+];
+
+/** The standing lede claims things about entries that do not exist yet. */
+const featuredLede =
+  featured.length > 0
+    ? 'Active lines of enquiry. Status labels describe research maturity, not deployment — none of these has been externally validated.'
+    : 'Project listings are in preparation. When they appear, each will say how mature the research is. None of it will mean something has been deployed.';
+
+---
+
+<BaseLayout description={SITE.description}>
+  <!-- ─────────────────────────────────────────────── hero ─────────────── -->
+  <section class="hero">
+    <div class="container hero__grid">
+      <div class="hero__text">
+      <p class="eyebrow">Open research portal · {SITE.institution}</p>
+
+      <h1 class="display hero__title">DAIM Research</h1>
+
+      <p class="hero__tagline">{SITE.tagline}</p>
+
+      <p class="statement hero__statement">
+        Exploring the frontiers of AI, data science and modelling — and
+        translating them into research that matters.
+      </p>
+
+      <p class="lede hero__supporting">
+        DAIM brings together researchers working across artificial intelligence,
+        data science, mathematical modelling and interdisciplinary applications
+        at the {SITE.institution}.
+      </p>
+
+      <div class="actions-row hero__actions">
+        <a class="action" href="/research">
+          Explore our research <span class="action__arrow" aria-hidden="true"
+            >→</span
+          >
+        </a>
+      </div>
+      </div>
+
+      <figure class="hero__figure">
+        <Image
+          class="hero__photo"
+          src={daimBuilding}
+          alt="The DAIM building at the University of Hull, seen from above"
+          widths={[400, 640, 800, 1200, 1600]}
+          sizes="(max-width: 700px) 92vw, (max-width: 900px) 34vw, 400px"
+          loading="eager"
+        />
+      </figure>
+    </div>
+
+    <!-- contents strip: a report cover's table of contents -->
+    <div class="container">
+      <ul class="contents">
+        {
+          contents.map((item) => (
+            <li class="contents__item">
+              <a class="contents__link" href={item.href}>
+                <span class="contents__label">{item.label}</span>
+                <span class="contents__arrow" aria-hidden="true">
+                  →
+                </span>
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────────────── research ─────────────── -->
+  <section class="section section--ruled" id="research">
+    <div class="container">
+      <SectionHead
+        index="01"
+        eyebrow="Research"
+        emoji="🔬"
+        title="Research"
+        lede="One theme for the methods, four for the domains we apply them in. They overlap, and the overlaps are where most of the interesting work happens."
+      />
+
+      <div class="grid grid--hairline grid--4 themes">
+        {
+          RESEARCH_AREAS.map((area, i) => (
+            <ResearchAreaCard
+              area={area}
+              href={`/research#${area.id}`}
+              index={String(i + 1).padStart(2, '0')}
+            />
+          ))
+        }
+      </div>
+
+      <p class="section-more">
+        <a class="action action--muted" href="/research">
+          All research areas in detail <span
+            class="action__arrow"
+            aria-hidden="true">→</span
+          >
+        </a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ───────────────────────────────────────── philosophy ─────────────── -->
+  <section class="section section--alt section--ruled" id="philosophy">
+    <div class="container philosophy">
+      <div class="philosophy__intro">
+        <p class="eyebrow"><span class="eyebrow-index">02</span><span
+            >Research philosophy</span
+          ></p>
+        <h2 class="philosophy__motto">Research by design, not by chance.</h2>
+      </div>
+
+      <ol class="philosophy__list">
+        {
+          PRINCIPLES.map((p, i) => (
+            <li class="principle">
+              <span class="meta principle__index">
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <h3 class="principle__title">{p.title}</h3>
+              <p class="principle__text">{p.text}</p>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </section>
+
+  <!-- ─────────────────────────────────── featured research ────────────── -->
+  <section class="section section--ruled" id="featured">
+    <div class="container">
+      <SectionHead
+        index="03"
+        eyebrow="Featured research"
+        emoji="🚀"
+        title="Featured Research"
+        lede={featuredLede}
+      />
+
+      {
+        featured.length > 0 ? (
+          <div class="grid grid--hairline grid--3">
+            {featured.map((p) => (
+              <ProjectCard
+                title={p.data.title}
+                summary={p.data.summary}
+                status={p.data.status}
+                topics={p.data.topics}
+                startYear={p.data.startYear}
+                links={p.data.links}
+              />
+            ))}
+          </div>
+        ) : (
+          <p class="empty-note">
+            Project listings are in preparation. They will appear here as each
+            piece of work is ready to describe accurately.
+          </p>
+        )
+      }
+
+      <p class="section-more">
+        <a class="action action--muted" href="/projects">
+          All projects <span class="action__arrow" aria-hidden="true">→</span>
+        </a>
+      </p>
+    </div>
+  </section>
+
+  <!-- ──────────────────────────────────────────── reports ─────────────── -->
+  {/* Parked: written and styled, but not published yet. Re-enable via
+      FEATURES.reports in src/data/site.ts (see the note there). */}
+  {
+    FEATURES.reports && (
+    <section class="section section--alt section--ruled" id="reports">
+      <div class="container">
+        <SectionHead
+          index="04"
+          eyebrow="Research reports"
+          emoji="📄"
+          title="DAIM Research Reports"
+          lede="Perspectives, research agendas, technical reports, benchmarks and community outputs from the DAIM research community."
+        />
+
+        {
+          reports.length > 0 ? (
+            <div class="list-ruled reports-list">
+              {reports.map((r) => (
+                <div>
+                  <ReportEntry
+                    number={r.data.number}
+                    title={r.data.title}
+                    authors={r.data.authors}
+                    date={r.data.date}
+                    type={r.data.type}
+                    status={r.data.status}
+                    abstract={r.data.abstract}
+                    pdfUrl={r.data.pdfUrl}
+                    arxivUrl={r.data.arxivUrl}
+                    githubUrl={r.data.githubUrl}
+                    doi={r.data.doi}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p class="empty-note">
+              The first reports in the series are in preparation.
+            </p>
+          )
+        }
+
+        <p class="section-more">
+          <a class="action action--muted" href="/reports">
+            The report series <span class="action__arrow" aria-hidden="true"
+              >→</span
+            >
+          </a>
+        </p>
+      </div>
+    </section>
+    )
+  }
+
+</BaseLayout>
+
+<style>
+  /* ---------------------------------------------------------------- hero -- */
+  .hero {
+    padding-top: clamp(2.75rem, 6vw, 5rem);
+    padding-bottom: 0;
+  }
+
+  /* Text left, photo right. The photo is decoration for the opening, so on
+     small screens it follows the heading rather than pushing it down. */
+  .hero__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.85fr);
+    gap: clamp(2rem, 5vw, 3.5rem);
+    align-items: start;
+  }
+
+  .hero__figure {
+    margin: 0;
+    /* line the photo up with the top of the headline, not the eyebrow */
+    padding-top: 2.4rem;
+  }
+
+  .hero__photo {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--rule);
+  }
+
+  /* Hold the two columns well below the old 860px so ordinary laptop and
+     split-screen widths keep the photo beside the text. */
+  @media (max-width: 700px) {
+    .hero__grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: clamp(1.75rem, 4vw, 2.5rem);
+    }
+    .hero__figure {
+      padding-top: 0;
+    }
+  }
+
+  /* Between 700 and 900 the text column gets tight, so give it more room
+     and let the photo shrink rather than stacking. */
+  @media (min-width: 701px) and (max-width: 900px) {
+    .hero__grid {
+      grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+      gap: clamp(1.5rem, 3vw, 2rem);
+    }
+    .hero__figure {
+      padding-top: 1.9rem;
+    }
+  }
+
+  .hero__title {
+    margin-top: 1.1rem;
+  }
+
+  .hero__tagline {
+    margin-top: 0.85rem;
+    font-family: var(--font-mono);
+    font-size: clamp(0.8125rem, 0.75rem + 0.25vw, 0.9375rem);
+    letter-spacing: 0.06em;
+    color: var(--ink-2);
+  }
+
+  .hero__statement {
+    margin-top: clamp(1.75rem, 3.5vw, 2.5rem);
+    max-width: 30ch;
+  }
+
+  .hero__supporting {
+    margin-top: 1.5rem;
+  }
+
+  .hero__actions {
+    margin-top: 1.75rem;
+  }
+
+  /* ------------------------------------------------------------ contents -- */
+  .contents {
+    display: grid;
+    /* One equal track per item — the strip is built from a filtered array,
+       so a hard-coded column count leaves a gap when a section is parked. */
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    list-style: none;
+    margin: clamp(2.75rem, 5vw, 4rem) 0 0;
+    padding: 0;
+    border-top: 1px solid var(--rule);
+  }
+
+  .contents__item + .contents__item {
+    border-left: 1px solid var(--rule);
+  }
+
+  .contents__link {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 1.15rem clamp(0.75rem, 1.5vw, 1.25rem) 1.25rem;
+    text-decoration: none;
+    transition: background-color 0.15s ease;
+  }
+
+  .contents__item:first-child .contents__link {
+    padding-left: 0;
+  }
+
+  .contents__link:hover {
+    background: var(--paper-alt);
+  }
+
+  .contents__label {
+    font-family: var(--font-serif);
+    font-size: clamp(1rem, 0.93rem + 0.32vw, 1.2rem);
+    color: var(--ink);
+  }
+
+  .contents__arrow {
+    flex: 0 0 auto;
+    color: var(--ink-3);
+    transition: transform 0.15s ease;
+  }
+
+  .contents__link:hover .contents__arrow {
+    transform: translateX(3px);
+  }
+
+  @media (max-width: 720px) {
+    .contents {
+      grid-auto-flow: row;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .contents__item:nth-child(odd) .contents__link {
+      padding-left: 0;
+    }
+    .contents__item:nth-child(2n + 1) {
+      border-left: 0;
+    }
+    .contents__item:nth-child(n + 3) {
+      border-top: 1px solid var(--rule);
+    }
+    /* The strip is built from a filtered array, so the count can be odd.
+       Run a lone last item full width rather than leaving an empty cell. */
+    .contents__item:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+    }
+  }
+
+  /* ---------------------------------------------------------- philosophy -- */
+  .philosophy {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.6fr);
+    gap: clamp(2rem, 5vw, 4.5rem);
+    align-items: start;
+  }
+
+  .philosophy__motto {
+    margin-top: 1.1rem;
+    font-family: var(--font-serif);
+    font-size: clamp(1.5rem, 1.2rem + 1.3vw, 2.15rem);
+    font-weight: 400;
+    line-height: 1.15;
+    letter-spacing: -0.016em;
+    color: var(--ink);
+    max-width: 14ch;
+  }
+
+  .philosophy__list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: clamp(1.5rem, 3vw, 2.25rem) clamp(1.75rem, 4vw, 3rem);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: none;
+  }
+
+  .principle {
+    border-top: 1px solid var(--rule-strong);
+    padding-top: 0.9rem;
+  }
+
+  .principle__index {
+    display: block;
+    color: var(--ink-4);
+    margin-bottom: 0.35rem;
+  }
+
+  .principle__title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+  }
+
+  .principle__text {
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    max-width: 42ch;
+  }
+
+  @media (max-width: 860px) {
+    .philosophy {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2rem;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .philosophy__list {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+
+  /* ------------------------------------------------------------- reports -- */
+  .reports-list {
+    border-top: 1px solid var(--rule);
+  }
+
+  .reports-list > div {
+    border-bottom: 1px solid var(--rule);
+  }
+
+  /* Frontier AI is the methods theme; the rest are domains. Running it full
+     width says that structurally, and avoids an odd empty cell with an odd
+     number of themes. :global() is needed because the card is rendered by a
+     child component and so carries its own style scope. */
+  .themes > :global(*:first-child) {
+    grid-column: 1 / -1;
+  }
+
+  /* -------------------------------------------------------------- shared -- */
+  .section-more {
+    margin-top: clamp(1.5rem, 3vw, 2.25rem);
+  }
+</style>

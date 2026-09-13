@@ -1,0 +1,78 @@
+---
+import type { ResearchArea } from '../data/research-areas';
+
+interface Props {
+  area: ResearchArea;
+  href: string;
+  index: string;
+}
+
+const { area, href, index } = Astro.props;
+---
+
+<article class="area">
+  <a class="area__link" href={href}>
+    <span class="visually-hidden">{area.title}</span>
+  </a>
+
+  <p class="eyebrow area__index">
+    <span class="eyebrow-index">{index}</span>
+  </p>
+
+  <h3 class="h-sub area__title">
+    <span class="h-emoji" aria-hidden="true">{area.emoji}</span>{area.title}
+  </h3>
+
+  <p class="area__summary">{area.summary}</p>
+
+  <ul class="tags area__tags">
+    {area.topics.map((topic) => <li class="tag">{topic}</li>)}
+  </ul>
+</article>
+
+<style>
+  .area {
+    position: relative;
+    background: var(--paper);
+    padding: clamp(1.5rem, 2.6vw, 2rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+    transition: background-color 0.15s ease;
+  }
+
+  .area:hover {
+    background: var(--paper-alt);
+  }
+
+  /* Whole-card target without nesting interactive content inside a link. */
+  .area__link {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+
+  .area__link:focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: -4px;
+  }
+
+  .area__index {
+    margin: 0;
+  }
+
+  .area__title {
+    margin: 0;
+  }
+
+  .area__summary {
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    max-width: 46ch;
+    flex: 1 1 auto;
+  }
+
+  .area__tags {
+    margin-top: 0.35rem;
+  }
+</style>

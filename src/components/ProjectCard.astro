@@ -1,0 +1,105 @@
+---
+interface Props {
+  title: string;
+  summary: string;
+  status: string;
+  topics?: string[];
+  startYear?: number;
+  links?: { github?: string; website?: string; report?: string };
+}
+
+const { title, summary, status, topics = [], startYear, links = {} } =
+  Astro.props;
+
+const outbound = [
+  links.github ? { label: 'GitHub', href: links.github } : null,
+  links.website ? { label: 'Website', href: links.website } : null,
+  links.report ? { label: 'Report', href: links.report } : null,
+].filter((x): x is { label: string; href: string } => x !== null);
+---
+
+<article class="project">
+  <div class="project__top">
+    <h3 class="h-sub project__title">{title}</h3>
+    <p class="project__summary">{summary}</p>
+  </div>
+
+  <div class="project__foot">
+    <div class="project__statusrow">
+      <span class="badge">{status}</span>
+      {startYear && <span class="meta">Since {startYear}</span>}
+    </div>
+
+    {
+      topics.length > 0 && (
+        <ul class="tags project__tags">
+          {topics.map((t) => (
+            <li class="tag">{t}</li>
+          ))}
+        </ul>
+      )
+    }
+
+    {
+      outbound.length > 0 && (
+        <ul class="list-plain project__links">
+          {outbound.map((l) => (
+            <li>
+              <a class="link" href={l.href} rel="noopener">
+                {l.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </div>
+</article>
+
+<style>
+  .project {
+    background: var(--paper);
+    padding: clamp(1.5rem, 2.6vw, 2rem);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 1.75rem;
+    min-height: 100%;
+  }
+
+  .project__top {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .project__title {
+    margin: 0;
+  }
+
+  .project__summary {
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    max-width: 46ch;
+  }
+
+  .project__foot {
+    display: flex;
+    flex-direction: column;
+    gap: 0.85rem;
+  }
+
+  .project__statusrow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .project__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.875rem;
+  }
+</style>

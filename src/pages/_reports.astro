@@ -1,0 +1,197 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import ReportEntry from '../components/ReportEntry.astro';
+
+const entries = (await getCollection('reports')).sort((a, b) => {
+  const at = a.data.date?.getTime() ?? Number.POSITIVE_INFINITY;
+  const bt = b.data.date?.getTime() ?? Number.POSITIVE_INFINITY;
+  if (at !== bt) return bt - at;
+  return a.data.number.localeCompare(b.data.number);
+});
+
+const rendered = await Promise.all(
+  entries.map(async (entry) => ({
+    entry,
+    Content: (await render(entry)).Content,
+  }))
+);
+
+/** Group by publication year; undated entries sit in "In preparation" first. */
+const IN_PREP = 'In preparation';
+const groups = new Map<string, typeof rendered>();
+for (const item of rendered) {
+  const key = item.entry.data.date
+    ? String(item.entry.data.date.getFullYear())
+    : IN_PREP;
+  const bucket = groups.get(key);
+  if (bucket) bucket.push(item);
+  else groups.set(key, [item]);
+}
+
+const orderedGroups = [...groups.entries()].sort(([a], [b]) => {
+  if (a === IN_PREP) return -1;
+  if (b === IN_PREP) return 1;
+  return Number(b) - Number(a);
+});
+
+const types = [...new Set(entries.map((e) => e.data.type))].sort();
+---
+
+<BaseLayout
+  title="Research Reports"
+  description="The DAIM Research Report series: perspectives, research agendas, technical reports, benchmarks and community outputs."
+>
+  <PageHeader
+    eyebrow="Research reports"
+    title="DAIM Research Reports"
+    lede="Perspectives, research agendas, technical reports, benchmarks and community outputs from the DAIM research community. Entries marked Draft are in preparation and have not been published or reviewed."
+  />
+
+  <section class="section">
+    <div class="container">
+      {
+        rendered.length > 0 ? (
+          <>
+            <div class="series-meta">
+              <div>
+                <p class="meta series-meta__label">Series</p>
+                <p class="series-meta__value">DAIM-RR</p>
+              </div>
+              <div>
+                <p class="meta series-meta__label">Entries</p>
+                <p class="series-meta__value">{rendered.length}</p>
+              </div>
+              <div>
+                <p class="meta series-meta__label">Types</p>
+                <p class="series-meta__value">{types.join(', ')}</p>
+              </div>
+            </div>
+
+            {orderedGroups.map(([label, items]) => (
+              <section class="report-group">
+                <h2 class="report-group__title meta">{label}</h2>
+                <div class="report-group__list">
+                  {items.map(({ entry, Content }) => (
+                    <div class="report-group__row">
+                      <ReportEntry
+                        number={entry.data.number}
+                        title={entry.data.title}
+                        authors={entry.data.authors}
+                        date={entry.data.date}
+                        type={entry.data.type}
+                        status={entry.data.status}
+                        abstract={entry.data.abstract}
+                        pdfUrl={entry.data.pdfUrl}
+                        arxivUrl={entry.data.arxivUrl}
+                        githubUrl={entry.data.githubUrl}
+                        doi={entry.data.doi}
+                      />
+                      <div class="prose report-group__body">
+                        <Content />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </section>
+            ))}
+          </>
+        ) : (
+          <p class="empty-note">
+            The first reports in the series are in preparation. Each entry
+            will carry its status: draft, preprint or published.
+          </p>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="section section--alt section--ruled">
+    <div class="container"><div class="measure">
+      <h2 class="h-section">About the series</h2>
+      <div class="prose stack-md" style="margin-top:1.25rem">
+        <p>
+          DAIM Research Reports are numbered <code>DAIM-RR-nnn</code>. They
+          cover work that should be written down but does not fit a conference
+          or a journal: research agendas, benchmark descriptions, technical
+          notes, considered perspectives.
+        </p>
+        <p>
+          Each entry says where it stands. <strong>Draft</strong> means in
+          preparation and not circulated. <strong>Preprint</strong> means
+          publicly available but not peer reviewed.
+          <strong>Published</strong> means it has been through a review process,
+          with the venue or DOI recorded.
+        </p>
+        <p>
+          Where a report comes with a repository, dataset or benchmark, that
+          is linked from the entry and released alongside it.
+        </p>
+      </div>
+    </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .series-meta {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+    padding-bottom: 1.75rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .series-meta p {
+    margin: 0;
+  }
+
+  .series-meta__label {
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    font-size: 0.6875rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .series-meta__value {
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    color: var(--ink);
+  }
+
+  .report-group {
+    margin-top: 2.5rem;
+  }
+
+  .report-group__title {
+    text-transform: uppercase;
+    letter-spacing: 0.13em;
+    font-size: 0.6875rem;
+    font-weight: 400;
+    color: var(--ink-3);
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--ink);
+  }
+
+  .report-group__row {
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 1.5rem;
+  }
+
+  .report-group__body {
+    padding-left: calc(11rem + clamp(1.25rem, 3vw, 2.5rem));
+    font-size: 0.9375rem;
+  }
+
+  @media (max-width: 700px) {
+    .series-meta {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+    }
+    .report-group__body {
+      padding-left: 0;
+    }
+  }
+</style>

@@ -1,0 +1,24 @@
+{
+  "name": "daimcentre.github.io",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DAIM Open Research Portal — Centre of Excellence for Data Science, Artificial Intelligence and Modelling, University of Hull",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro check && astro build",
+    "build:fast": "astro build",
+    "preview": "astro preview",
+    "check": "astro check",
+    "astro": "astro",
+    "clean": "node -e \"const fs=require('fs');['dist','.astro','node_modules/.astro'].forEach(p=>fs.rmSync(p,{recursive:true,force:true}));console.log('Cleared dist/, .astro/ and node_modules/.astro.');console.log('If `astro dev` is running, RESTART IT — its content store was just deleted,');console.log('and it will serve empty collections until you do.');\"",
+    "rebuild": "npm run clean && npm run build"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/sitemap": "^3.6.0",
+    "astro": "^5.16.0",
+    "typescript": "^5.9.3"
+  }
+}

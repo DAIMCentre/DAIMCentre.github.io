@@ -1,0 +1,171 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { getCollection, render } from 'astro:content';
+import { Image } from 'astro:assets';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+// No posts yet, so this generates nothing. It exists so that dropping a
+// Markdown file into src/content/blogs/ produces a working page with no code
+// change — the same rule the rest of the site follows.
+export async function getStaticPaths() {
+  const posts = await getCollection('blogs');
+  return posts
+    .filter((p) => !p.data.draft)
+    .map((post) => ({ params: { slug: post.id }, props: { post } }));
+}
+
+interface Props {
+  post: CollectionEntry<'blogs'>;
+}
+
+const { post } = Astro.props;
+const { Content } = await render(post);
+
+const fmt = (d: Date) =>
+  new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(d);
+---
+
+<BaseLayout title={post.data.title} description={post.data.description}>
+  <article class="section">
+    <div class="container">
+      <div class="measure">
+        <p class="meta post-meta">
+          <a class="link-quiet" href="/blogs">Blogs</a>
+          <span aria-hidden="true"> · </span>
+          <time datetime={post.data.date.toISOString()}>
+            {fmt(post.data.date)}
+          </time>
+          {post.data.author && <span> · {post.data.author}</span>}
+        </p>
+
+        <h1 class="h-page post-title">{post.data.title}</h1>
+        <p class="lede post-lede">{post.data.description}</p>
+
+        {
+          post.data.tags.length > 0 && (
+            <ul class="tags post-tags">
+              {post.data.tags.map((t) => (
+                <li class="tag">{t}</li>
+              ))}
+            </ul>
+          )
+        }
+      </div>
+
+      {
+        post.data.cover && (
+          <Image
+            class="post-cover"
+            src={post.data.cover}
+            alt=""
+            width={1600}
+            loading="eager"
+          />
+        )
+      }
+
+      <div class="measure prose post-body">
+        <Content />
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .post-meta {
+    margin: 0 0 1rem;
+  }
+
+  .post-title {
+    margin-bottom: 1.25rem;
+  }
+
+  .post-lede {
+    margin-bottom: 1.25rem;
+  }
+
+  .post-tags {
+    margin-bottom: 0.5rem;
+  }
+
+  .post-cover {
+    width: 100%;
+    height: auto;
+    margin-block: clamp(2rem, 4vw, 3rem);
+    border: 1px solid var(--rule);
+  }
+
+  .post-body {
+    margin-top: clamp(2rem, 4vw, 3rem);
+  }
+
+  /* Markdown body: the frontmatter title is the h1, so posts start at h2. */
+  .post-body :global(h2) {
+    font-family: var(--font-serif);
+    font-size: clamp(1.35rem, 1.15rem + 0.8vw, 1.65rem);
+    font-weight: 400;
+    line-height: 1.2;
+    margin-top: 2.25rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .post-body :global(h3) {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    margin-top: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .post-body :global(ul),
+  .post-body :global(ol) {
+    margin: 0 0 1.05rem 1.15rem;
+    color: var(--ink-2);
+  }
+
+  .post-body :global(li) {
+    margin-bottom: 0.35rem;
+  }
+
+  .post-body :global(blockquote) {
+    margin: 1.5rem 0;
+    padding-left: 1.25rem;
+    border-left: 2px solid var(--ink);
+    font-family: var(--font-serif);
+    font-size: 1.125rem;
+    color: var(--ink);
+  }
+
+  .post-body :global(pre) {
+    overflow-x: auto;
+    padding: 1rem;
+    border: 1px solid var(--rule);
+    background: var(--paper-alt);
+    font-size: 0.8125rem;
+    margin-bottom: 1.05rem;
+  }
+
+  .post-body :global(code) {
+    font-family: var(--font-mono);
+    font-size: 0.875em;
+  }
+
+  .post-body :global(img) {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid var(--rule);
+  }
+
+  .post-body :global(a) {
+    color: var(--ink);
+    border-bottom: 1px solid var(--rule-strong);
+    text-decoration: none;
+  }
+
+  .post-body :global(a:hover) {
+    border-bottom-color: var(--ink);
+  }
+</style>

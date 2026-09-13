@@ -1,0 +1,236 @@
+---
+import { NAV, SITE } from '../data/site';
+
+const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
+const isCurrent = (href: string) => path === href || path.startsWith(href + '/');
+---
+
+<header class="site-header">
+  <div class="container site-header__inner">
+    <a class="brand" href="/" aria-label={`${SITE.title} — home`}>
+      <img
+        src={SITE.logo}
+        alt={SITE.logoAlt}
+        width="532.5"
+        height="135.836"
+        class="brand__logo"
+      />
+    </a>
+
+    <nav class="site-nav" aria-label="Primary">
+      <ul class="site-nav__list">
+        {
+          NAV.map((item) => (
+            <li>
+              <a
+                href={item.href}
+                class="site-nav__link"
+                aria-current={isCurrent(item.href) ? 'page' : undefined}
+              >
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+
+    <details class="menu">
+      <summary class="menu__button" aria-label="Menu">
+        <span class="menu__bars" aria-hidden="true"></span>
+        <span class="menu__label">Menu</span>
+      </summary>
+      <nav class="menu__panel" aria-label="Primary, mobile">
+        <ul class="menu__list">
+          {
+            NAV.map((item) => (
+              <li>
+                <a
+                  href={item.href}
+                  class="menu__link"
+                  aria-current={isCurrent(item.href) ? 'page' : undefined}
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+    </details>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: var(--paper);
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .site-header__inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    min-height: var(--header-h);
+    padding-block: 0.75rem;
+  }
+
+  /* Logo is cropped flush to its artwork, so clear space is set here, in CSS. */
+  .brand {
+    display: block;
+    flex: 0 0 auto;
+    line-height: 0;
+    text-decoration: none;
+  }
+
+  .brand__logo {
+    height: 2.75rem;
+    width: auto;
+    max-width: 100%;
+  }
+
+  .site-nav__list {
+    display: flex;
+    align-items: center;
+    gap: clamp(1rem, 2vw, 1.65rem);
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .site-nav__link {
+    display: inline-block;
+    font-size: 0.875rem;
+    color: var(--ink-2);
+    text-decoration: none;
+    padding-block: 0.35rem;
+    border-bottom: 1px solid transparent;
+    transition: color 0.15s ease, border-color 0.15s ease;
+    white-space: nowrap;
+  }
+
+  .site-nav__link:hover {
+    color: var(--ink);
+    border-bottom-color: var(--rule-strong);
+  }
+
+  .site-nav__link[aria-current='page'] {
+    color: var(--ink);
+    border-bottom-color: var(--ink);
+  }
+
+  /* ---- mobile disclosure menu: no JavaScript, fully keyboard operable ---- */
+
+  .menu {
+    display: none;
+    position: relative;
+  }
+
+  .menu__button {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-2);
+    border: 1px solid var(--rule);
+    padding: 0.45rem 0.7rem;
+    user-select: none;
+  }
+
+  .menu__button::-webkit-details-marker {
+    display: none;
+  }
+
+  .menu__bars {
+    position: relative;
+    display: block;
+    width: 14px;
+    height: 9px;
+    border-top: 1px solid currentColor;
+    border-bottom: 1px solid currentColor;
+  }
+
+  .menu__bars::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 4px;
+    width: 100%;
+    border-top: 1px solid currentColor;
+  }
+
+  .menu[open] .menu__bars {
+    border-bottom-color: transparent;
+  }
+
+  .menu__panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 0.75rem);
+    min-width: 13.5rem;
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    box-shadow: 0 8px 24px -18px rgba(0, 0, 0, 0.4);
+  }
+
+  .menu__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+
+  .menu__list li + li {
+    border-top: 1px solid var(--rule);
+  }
+
+  .menu__link {
+    display: block;
+    padding: 0.7rem 1rem;
+    font-size: 0.9375rem;
+    color: var(--ink-2);
+    text-decoration: none;
+  }
+
+  .menu__link:hover {
+    background: var(--paper-alt);
+    color: var(--ink);
+  }
+
+  .menu__link[aria-current='page'] {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* Sized for the full navigation, not the currently visible subset, so
+     restoring a parked section cannot overflow the header. The complete
+     list needs about 800px beside the logo. */
+  @media (max-width: 960px) {
+    .site-nav {
+      display: none;
+    }
+    .menu {
+      display: block;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .brand__logo {
+      height: 2.25rem;
+    }
+  }
+
+  @media (max-width: 340px) {
+    .menu__label {
+      display: none;
+    }
+  }
+</style>

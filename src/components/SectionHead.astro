@@ -1,0 +1,38 @@
+---
+interface Props {
+  /** Two-digit index shown before the eyebrow, e.g. "01". */
+  index?: string;
+  eyebrow: string;
+  emoji?: string;
+  title: string;
+  /** Optional intro paragraph rendered under the heading. */
+  lede?: string;
+  /** Heading level. Defaults to h2. */
+  as?: 'h2' | 'h3';
+  id?: string;
+}
+
+const {
+  index,
+  eyebrow,
+  emoji,
+  title,
+  lede,
+  as: Tag = 'h2',
+  id,
+}: Props = Astro.props;
+---
+
+<div class="section-head">
+  <p class="eyebrow">
+    {index && <span class="eyebrow-index">{index}</span>}
+    <span>{eyebrow}</span>
+  </p>
+  <div class="section-head__text stack-md stack">
+    <Tag class="h-section" id={id}>
+      {emoji && <span class="h-emoji" aria-hidden="true">{emoji}</span>}{title}
+    </Tag>
+    {lede && <p class="lede">{lede}</p>}
+    <slot />
+  </div>
+</div>

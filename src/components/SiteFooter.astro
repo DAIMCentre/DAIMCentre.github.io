@@ -1,0 +1,100 @@
+---
+import { LINKS, SITE } from '../data/site';
+import LinkOrPlaceholder from './LinkOrPlaceholder.astro';
+
+const year = new Date().getFullYear();
+---
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="site-footer__grid">
+      <div class="site-footer__about">
+        <p class="meta site-footer__label">{SITE.shortName}</p>
+        <p class="site-footer__text">
+          {SITE.longName}, {SITE.institution}.
+        </p>
+        <p class="site-footer__text text-muted">Open research portal.</p>
+      </div>
+
+      <nav class="site-footer__links" aria-label="Footer">
+        <p class="meta site-footer__label">Elsewhere</p>
+        <ul class="list-plain site-footer__list">
+          <li><LinkOrPlaceholder link={LINKS.university} /></li>
+          <li><LinkOrPlaceholder link={LINKS.officialPage} /></li>
+          <li><LinkOrPlaceholder link={LINKS.github} label="GitHub" /></li>
+          <li><LinkOrPlaceholder link={LINKS.linkedin} /></li>
+          <li><LinkOrPlaceholder link={LINKS.contact} /></li>
+        </ul>
+      </nav>
+    </div>
+
+    <p class="site-footer__motto">{SITE.motto}</p>
+
+    <p class="site-footer__fineprint">
+      © {year} {SITE.institution}. Built as a static site. Content licensed{' '}
+      <a
+        class="link-quiet"
+        href="https://creativecommons.org/licenses/by/4.0/"
+        rel="license noopener">CC BY 4.0</a
+      >; University of Hull branding excluded.
+    </p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--rule);
+    padding-block: clamp(2.5rem, 5vw, 3.75rem) 2.25rem;
+    margin-top: clamp(3rem, 6vw, 5rem);
+  }
+
+  .site-footer__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    gap: clamp(2rem, 5vw, 4rem);
+    align-items: start;
+  }
+
+  .site-footer__label {
+    margin-bottom: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.13em;
+    font-size: 0.6875rem;
+  }
+
+  .site-footer__text {
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    max-width: 46ch;
+    margin-bottom: 0.6rem;
+  }
+
+  .site-footer__list li {
+    margin-bottom: 0.45rem;
+    font-size: 0.9375rem;
+  }
+
+  .site-footer__motto {
+    margin-top: clamp(2.5rem, 5vw, 3.5rem);
+    padding-top: 2rem;
+    border-top: 1px solid var(--rule);
+    text-align: center;
+    font-family: var(--font-serif);
+    font-size: clamp(1.05rem, 0.95rem + 0.4vw, 1.25rem);
+    color: var(--ink);
+  }
+
+  .site-footer__fineprint {
+    margin-top: 1rem;
+    text-align: center;
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+  }
+
+  @media (max-width: 700px) {
+    .site-footer__grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 2rem;
+    }
+  }
+</style>

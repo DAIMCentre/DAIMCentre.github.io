@@ -1,0 +1,47 @@
+name: Deploy to GitHub Pages
+
+on:
+  # Deploy on every push to the default branch.
+  push:
+    branches: [main]
+  # Allow a manual run from the Actions tab.
+  workflow_dispatch:
+
+# Least privilege: read the repo, write a Pages deployment, use OIDC.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Let one deployment finish before the next starts, so a queued run never
+# overwrites a newer one.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # withastro/action installs dependencies, runs `astro build` and uploads
+      # dist/ as the Pages artifact.
+      - name: Build Astro site
+        uses: withastro/action@v3
+        with:
+          node-version: 20
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

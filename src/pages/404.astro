@@ -1,0 +1,55 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { NAV } from '../data/site';
+---
+
+<BaseLayout
+  title="Page not found"
+  description="The page you were looking for does not exist on the DAIM open research portal."
+  noindex
+>
+  <section class="section">
+    <div class="container"><div class="measure">
+      <p class="eyebrow">Error 404</p>
+      <h1 class="h-page" style="margin-top:1rem">Page not found</h1>
+      <p class="lede" style="margin-top:1.25rem">
+        That page does not exist here. It may have moved, or the link may be out
+        of date.
+      </p>
+
+      <ul class="list-ruled notfound-nav">
+        <li><a class="notfound-nav__link" href="/">Home</a></li>
+        {
+          NAV.map((item) => (
+            <li>
+              <a class="notfound-nav__link" href={item.href}>
+                {item.label}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .notfound-nav {
+    margin-top: clamp(2rem, 4vw, 3rem);
+  }
+
+  .notfound-nav__link {
+    display: block;
+    padding-block: 0.85rem;
+    text-decoration: none;
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    transition: color 0.15s ease, padding-left 0.15s ease;
+  }
+
+  .notfound-nav__link:hover {
+    color: var(--ink);
+    padding-left: 0.4rem;
+  }
+</style>

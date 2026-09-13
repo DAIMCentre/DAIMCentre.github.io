@@ -1,0 +1,31 @@
+---
+import type { ExternalLink } from '../data/site';
+
+interface Props {
+  link: ExternalLink;
+  /** Class applied when the link is real. */
+  class?: string;
+  /** Override the visible text of a real link. */
+  label?: string;
+}
+
+const { link, class: className = 'link-quiet', label } = Astro.props;
+const isExternal = !!link.href && /^https?:\/\//.test(link.href);
+---
+
+{
+  link.href ? (
+    <a
+      href={link.href}
+      class={className}
+      rel={isExternal ? 'noopener' : undefined}
+    >
+      {label ?? link.label}
+    </a>
+  ) : (
+    <span class="placeholder">
+      <span aria-hidden="true">◇</span>
+      {link.note ?? link.label} — placeholder, not yet supplied
+    </span>
+  )
+}

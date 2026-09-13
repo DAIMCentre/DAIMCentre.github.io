@@ -1,0 +1,145 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/PageHeader.astro';
+import { FEATURES } from '../../data/site';
+
+const posts = (await getCollection('blogs'))
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => b.data.date.getTime() - a.data.date.getTime());
+
+const fmt = (d: Date) =>
+  new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(d);
+---
+
+<BaseLayout
+  title="Blogs"
+  description="Notes and writing from the DAIM research community — work in progress, method notes, and thinking that is not yet a paper."
+>
+  <PageHeader
+    eyebrow="Blogs"
+    title="Notes and writing"
+    lede="Shorter pieces from the DAIM research community: work in progress, method notes, reading, and thinking that is not yet a paper."
+  />
+
+  <section class="section">
+    <div class="container">
+      {
+        posts.length > 0 ? (
+          <ul class="list-ruled posts">
+            {posts.map((post) => (
+              <li class="post">
+                <a class="post__link" href={`/blogs/${post.id}`}>
+                  <p class="meta post__date">
+                    <time datetime={post.data.date.toISOString()}>
+                      {fmt(post.data.date)}
+                    </time>
+                    {post.data.author && <span> · {post.data.author}</span>}
+                  </p>
+                  <h2 class="h-sub post__title">{post.data.title}</h2>
+                  <p class="post__desc">{post.data.description}</p>
+                </a>
+                {post.data.tags.length > 0 && (
+                  <ul class="tags post__tags">
+                    {post.data.tags.map((t) => (
+                      <li class="tag">{t}</li>
+                    ))}
+                  </ul>
+                )}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div class="coming-soon">
+            <p class="meta coming-soon__label">Coming soon</p>
+            <h2 class="h-section coming-soon__title">
+              The first posts are being written
+            </h2>
+            <div class="prose coming-soon__body">
+              <p>
+                Shorter writing from the DAIM research community will appear
+                here: things we want to write down that do not fit a paper or
+                a report.
+              </p>
+              {/* Only offer the report series while it is published. */}
+              {FEATURES.reports && (
+                <p>
+                  Longer, citable work goes to the{' '}
+                  <a class="link" href="/reports">
+                    research report series
+                  </a>{' '}
+                  instead.
+                </p>
+              )}
+            </div>
+          </div>
+        )
+      }
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .posts {
+    border-top: 1px solid var(--rule);
+  }
+
+  .post {
+    padding-block: clamp(1.5rem, 3vw, 2rem);
+  }
+
+  .post__link {
+    display: block;
+    text-decoration: none;
+  }
+
+  .post__date {
+    margin: 0 0 0.5rem;
+  }
+
+  .post__title {
+    margin: 0 0 0.5rem;
+    max-width: 34ch;
+  }
+
+  .post__link:hover .post__title {
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .post__desc {
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+    max-width: 68ch;
+    margin: 0;
+  }
+
+  .post__tags {
+    margin-top: 0.75rem;
+  }
+
+  .coming-soon {
+    border: 1px dashed var(--rule-strong);
+    padding: clamp(1.75rem, 4vw, 2.75rem);
+    max-width: 62ch;
+  }
+
+  .coming-soon__label {
+    margin: 0 0 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.13em;
+    font-size: 0.6875rem;
+  }
+
+  .coming-soon__title {
+    margin-bottom: 1rem;
+  }
+
+  .coming-soon__body {
+    font-size: 0.9375rem;
+  }
+</style>
