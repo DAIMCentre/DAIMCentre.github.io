@@ -32,15 +32,21 @@ automatically, so every entry is one a person has checked.
 **Blogs** — shorter pieces from the research community: work in progress, method
 notes, reading, and thinking that is not yet a paper.
 
-**Team** — researchers working across the themes. The University of Hull DAIM
-page remains the authoritative record of membership, and the page links to it.
+**Opportunities** — PhD and MSc by Thesis projects supervisors are offering,
+each with the question it asks, what the student would need to bring, and who
+supervises it. An entry carries an expiry date and stops being published once
+that date passes, so the catalogue prunes itself.
+
+**Team** — researchers working across the themes. It is a portal directory
+rather than the centre roster: the University of Hull DAIM page remains the
+authoritative record of membership, and the page links to it.
 
 ---
 
 ## Editing it
 
 Page text lives in Markdown under `src/content/` — one file per project,
-publication, post or person. Each folder holds a `_template.md` documenting its
+opportunity, publication, post or person. Each folder holds a `_template.md` documenting its
 fields: copy it, rename it without the leading underscore, and fill it in. Files
 starting with `_` are ignored, so templates never ship.
 

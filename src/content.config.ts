@@ -225,8 +225,39 @@ const publications = defineCollection({
     draft: z.boolean().default(false),
   }),
 });
+/**
+ * PhD and MSc by Thesis project opportunities.
+ *
+ * `expires` is the date the project leaves the catalogue. /opportunities drops
+ * anything already past, so an entry stops being advertised on its own without
+ * anybody having to remember to delete it. Leave it unset for an open-ended
+ * project.
+ */
+const opportunities = defineCollection({
+  loader: glob({ base: './src/content/opportunities', pattern }),
+  schema: z.object({
+    title: z.string(),
+    /** Degree the project is offered for. */
+    level: z.enum(['PhD', 'MSc by Thesis']),
+    /** Name as the supervisor wants it written. */
+    supervisor: z.string(),
+    /** Their University staff page. Their email lives there; the site does not
+        republish colleagues' email addresses. */
+    supervisorUrl: z.string().url().optional(),
+    /** Short keywords for scanning. Use wording from the project description. */
+    topics: z.array(z.string()).default([]),
+    /** Research area ids from src/data/research-areas.ts. */
+    areas: z.array(z.string()).default([]),
+    /** Past this date the entry stops being published. */
+    expires: z.coerce.date().optional(),
+    /** Lower sorts first; ties fall back to title order. */
+    order: z.number().default(100),
+  }),
+});
+
 export const collections = {
   projects,
+  opportunities,
   reports,
   seminars,
   paperClub,

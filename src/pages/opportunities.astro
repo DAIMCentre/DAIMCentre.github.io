@@ -1,0 +1,488 @@
+---
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHeader from '../components/PageHeader.astro';
+import LinkOrPlaceholder from '../components/LinkOrPlaceholder.astro';
+import { RESEARCH_AREAS } from '../data/research-areas';
+import { LINKS } from '../data/site';
+
+/* An entry drops out of the catalogue on its own once `expires` has passed, so
+   nobody has to remember to prune the list. Comparing against the start of
+   today means a project is still offered on its own expiry date. */
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+/* The degrees the catalogue is for. Doubles as the running order, so PhD
+   projects lead and MSc by Thesis follows. Matches the `level` enum in
+   src/content.config.ts. */
+const DEGREES = ['PhD', 'MSc by Thesis'];
+
+const entries = (await getCollection('opportunities'))
+  .filter((e) => !e.data.expires || e.data.expires >= today)
+  .sort(
+    (a, b) =>
+      DEGREES.indexOf(a.data.level) - DEGREES.indexOf(b.data.level) ||
+      a.data.order - b.data.order ||
+      a.data.title.localeCompare(b.data.title)
+  );
+
+const rendered = await Promise.all(
+  entries.map(async (entry) => ({
+    entry,
+    Content: (await render(entry)).Content,
+  }))
+);
+
+const areaTitle = (id: string) =>
+  RESEARCH_AREAS.find((a) => a.id === id)?.title ?? id;
+
+/** Every keyword on a card: research areas first, then the project's own topics. */
+const keywordsFor = (d: (typeof entries)[number]['data']) => [
+  ...d.areas.map(areaTitle),
+  ...d.topics,
+];
+
+/* The filter offers every keyword that appears on at least one entry, ordered
+   by how many entries carry it so the broadest filters come first. */
+const counts = new Map<string, number>();
+for (const { entry } of rendered) {
+  for (const k of keywordsFor(entry.data)) {
+    counts.set(k, (counts.get(k) ?? 0) + 1);
+  }
+}
+const keywords = [...counts.entries()].sort(
+  ([ka, a], [kb, b]) => b - a || ka.localeCompare(kb)
+);
+
+const supervisors = [...new Set(entries.map((e) => e.data.supervisor))];
+
+/* Per-row labels are driven by what is actually listed, so they stay off
+   while every entry is the same degree and appear once the mix is real. */
+const levels = [...new Set(entries.map((e) => e.data.level))];
+const showLevelOnCards = levels.length > 1;
+---
+
+<BaseLayout
+  title="Opportunities"
+  description="PhD and MSc by Thesis project opportunities with researchers at DAIM, the Centre of Excellence for Data Science, Artificial Intelligence and Modelling at the University of Hull."
+>
+  <PageHeader
+    eyebrow="Opportunities"
+    title="PhD and MSc by Thesis projects"
+    lede="Projects DAIM researchers are offering to research students. Each one names the supervisor, what the project investigates, and what you would need to bring to it."
+  />
+
+  <section class="section">
+    <div class="container">
+      {
+        rendered.length > 0 ? (
+          <>
+            <div class="catalogue-meta">
+              <div>
+                <p class="meta catalogue-meta__label">Projects</p>
+                <p class="catalogue-meta__value" data-count>
+                  {entries.length}
+                </p>
+              </div>
+              <div>
+                <p class="meta catalogue-meta__label">Supervisors</p>
+                <p class="catalogue-meta__value">{supervisors.length}</p>
+              </div>
+              <div>
+                <p class="meta catalogue-meta__label">Degrees</p>
+                <p class="catalogue-meta__value">{DEGREES.join(', ')}</p>
+              </div>
+            </div>
+
+            {/* Progressive enhancement: the filter is hidden until the inline
+                script switches it on, so with JavaScript off the page is simply
+                the full catalogue rather than a row of dead buttons. */}
+            <div class="filter" id="filter" hidden>
+              <p class="meta filter__label" id="filter-label">
+                Filter by keyword
+              </p>
+              <div
+                class="filter__row"
+                role="group"
+                aria-labelledby="filter-label"
+              >
+                <button
+                  class="chip"
+                  type="button"
+                  data-key="*"
+                  aria-pressed="true"
+                >
+                  All <span class="chip__n">{entries.length}</span>
+                </button>
+                {keywords.map(([k, n]) => (
+                  <button
+                    class="chip"
+                    type="button"
+                    data-key={k}
+                    aria-pressed="false"
+                  >
+                    {k} <span class="chip__n">{n}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <ul class="list-plain opportunities">
+              {rendered.map(({ entry, Content }, i) => (
+                <li
+                  class="opportunity"
+                  id={entry.id}
+                  data-keywords={keywordsFor(entry.data).join('|')}
+                >
+                  <div class="opportunity__aside">
+                    <p class="meta opportunity__index" data-index>
+                      {String(i + 1).padStart(2, '0')}
+                    </p>
+                    {showLevelOnCards && (
+                      <p class="meta opportunity__level">{entry.data.level}</p>
+                    )}
+                    <p class="opportunity__supervisor">
+                      <span class="meta opportunity__supervisor-label">
+                        Supervisor
+                      </span>
+                      {entry.data.supervisorUrl ? (
+                        <a
+                          class="link"
+                          href={entry.data.supervisorUrl}
+                          rel="noopener"
+                        >
+                          {entry.data.supervisor}
+                        </a>
+                      ) : (
+                        entry.data.supervisor
+                      )}
+                    </p>
+                    {keywordsFor(entry.data).length > 0 && (
+                      <ul class="tags opportunity__tags">
+                        {keywordsFor(entry.data).map((k) => (
+                          <li class="tag">{k}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+
+                  <div class="opportunity__main">
+                    <h2 class="h-section opportunity__title">
+                      {entry.data.title}
+                    </h2>
+                    <div class="prose opportunity__detail">
+                      <Content />
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+
+            <p class="no-match" id="no-match" hidden>
+              No project carries that keyword. Clear the filter to see all{' '}
+              {entries.length}.
+            </p>
+          </>
+        ) : (
+          <div class="empty-state">
+            <div class="prose">
+              <p>
+                There are no projects in the catalogue at the moment. New ones
+                are added as supervisors propose them.
+              </p>
+            </div>
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="section section--alt section--ruled">
+    <div class="container"><div class="measure">
+      <h2 class="h-section">Applying</h2>
+      <div class="prose stack-md" style="margin-top:1.25rem">
+        <p>
+          Write to the supervisor named on the project before you apply. Their
+          contact details are on their University staff page, linked from each
+          entry. Say what draws you to the project and what you have done that
+          is relevant — a short, specific message is worth more than a long
+          general one.
+        </p>
+        <p>
+          The application itself goes through the University. Entry
+          requirements, fees, start dates and the form are all on the{' '}
+          <LinkOrPlaceholder link={LINKS.researchDegrees} class="link" />{' '}
+          page, which covers both the MSc by Thesis and the PhD.
+        </p>
+        <p>
+          For the centre itself — people, facilities and the wider research
+          programme — see the{' '}
+          <LinkOrPlaceholder
+            link={LINKS.officialPage}
+            class="link"
+            label="University of Hull DAIM page"
+          />
+          .
+        </p>
+      </div>
+    </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<script is:inline>
+  (function () {
+    var filter = document.getElementById('filter');
+    var list = document.querySelector('.opportunities');
+    if (!filter || !list) return;
+
+    var cards = Array.prototype.slice.call(list.children);
+    var chips = Array.prototype.slice.call(filter.querySelectorAll('.chip'));
+    var count = document.querySelector('[data-count]');
+    var noMatch = document.getElementById('no-match');
+
+    function apply(key) {
+      var shown = 0;
+      cards.forEach(function (card) {
+        var keys = (card.getAttribute('data-keywords') || '').split('|');
+        var match = key === '*' || keys.indexOf(key) !== -1;
+        card.hidden = !match;
+        if (match) shown++;
+      });
+      chips.forEach(function (chip) {
+        chip.setAttribute(
+          'aria-pressed',
+          chip.getAttribute('data-key') === key ? 'true' : 'false'
+        );
+      });
+      if (count) count.textContent = String(shown);
+      if (noMatch) noMatch.hidden = shown !== 0;
+
+      // Keep the numbering contiguous after a filter, so a filtered list does
+      // not read as 01, 04, 05.
+      var n = 0;
+      cards.forEach(function (c) {
+        if (c.hidden) return;
+        n++;
+        var idx = c.querySelector('[data-index]');
+        if (idx) idx.textContent = n < 10 ? '0' + n : String(n);
+      });
+    }
+
+    chips.forEach(function (chip) {
+      chip.addEventListener('click', function () {
+        // Clicking the active keyword again clears the filter.
+        var key = chip.getAttribute('data-key');
+        apply(chip.getAttribute('aria-pressed') === 'true' ? '*' : key);
+      });
+    });
+
+    filter.hidden = false;
+    apply('*');
+  })();
+</script>
+
+<style>
+  .catalogue-meta {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.5rem;
+    padding-bottom: 1.75rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .catalogue-meta p {
+    margin: 0;
+  }
+
+  .catalogue-meta__label {
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    font-size: 0.6875rem;
+    margin-bottom: 0.4rem;
+  }
+
+  .catalogue-meta__value {
+    font-family: var(--font-serif);
+    font-size: 1.05rem;
+    color: var(--ink);
+  }
+
+  /* ------------------------------------------------------------- filter -- */
+
+  .filter {
+    padding-block: 1.5rem 1.75rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .filter__label {
+    margin: 0 0 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    font-size: 0.6875rem;
+  }
+
+  .filter__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  .chip {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    line-height: 1.3;
+    color: var(--ink-2);
+    background: var(--paper);
+    border: 1px solid var(--rule-strong);
+    padding: 0.35rem 0.6rem;
+    cursor: pointer;
+    transition: background-color 0.12s ease, color 0.12s ease,
+      border-color 0.12s ease;
+  }
+
+  .chip:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  .chip[aria-pressed='true'] {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--paper);
+  }
+
+  .chip__n {
+    opacity: 0.55;
+    margin-left: 0.3rem;
+  }
+
+  .chip[aria-pressed='true'] .chip__n {
+    opacity: 0.7;
+  }
+
+  /* ---------------------------------------------------------- catalogue -- */
+
+  .opportunities {
+    margin-top: 1rem;
+  }
+
+  /* Full-width rows. The aside carries the metadata so the description can
+     run across a column of its own instead of leaving the right half empty. */
+  .opportunity {
+    display: grid;
+    grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+    gap: clamp(1.25rem, 4vw, 3.5rem);
+    padding-block: 2.5rem;
+    border-bottom: 1px solid var(--rule);
+    scroll-margin-top: calc(var(--header-h) + 1.5rem);
+  }
+
+  /* `.opportunity` sets display:grid, which out-specifies the browser's own
+     [hidden] rule, so a filtered-out row needs this to actually disappear. */
+  .opportunity[hidden] {
+    display: none;
+  }
+
+  .opportunity__aside {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  .opportunity__index {
+    margin: 0;
+    color: var(--ink-4);
+  }
+
+  .opportunity__level {
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.13em;
+    font-size: 0.6875rem;
+    color: var(--ink-3);
+  }
+
+  .opportunity__supervisor {
+    margin: 0;
+    font-size: 0.9375rem;
+    color: var(--ink-2);
+  }
+
+  .opportunity__supervisor-label {
+    display: block;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    font-size: 0.6875rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .opportunity__tags {
+    margin: 0;
+  }
+
+  .opportunity__title {
+    margin: 0;
+    max-width: 40ch;
+  }
+
+  .opportunity__detail {
+    margin-top: 1.25rem;
+    font-size: 0.9375rem;
+  }
+
+  /* The aside already takes its share of the row, so the shared 68ch cap would
+     only reintroduce the empty strip on the right. 84ch keeps the line length
+     inside what is still comfortable to read. :global() is needed because this
+     is rendered Markdown. */
+  .opportunity__detail :global(p),
+  .opportunity__detail :global(li) {
+    max-width: 84ch;
+  }
+
+  /* The body uses `##` headings for "The project", "What you will need" and so
+     on. They sit below the project title, so they are quieter than a prose h2. */
+  .opportunity__detail :global(h2) {
+    font-family: var(--font-mono);
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    font-size: 0.6875rem;
+    font-weight: 400;
+    color: var(--ink-3);
+    margin-top: 1.75rem;
+  }
+
+  .opportunity__detail :global(h2:first-child) {
+    margin-top: 0;
+  }
+
+  .opportunity__detail :global(ul) {
+    margin-top: 0.5rem;
+  }
+
+  .no-match {
+    margin-top: 2rem;
+    color: var(--ink-2);
+    max-width: 62ch;
+  }
+
+  .empty-state {
+    border: 1px dashed var(--rule-strong);
+    padding: clamp(1.75rem, 4vw, 2.75rem);
+    max-width: 62ch;
+  }
+
+  @media (max-width: 820px) {
+    .opportunity {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1.25rem;
+    }
+  }
+
+  @media (max-width: 700px) {
+    .catalogue-meta {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+    }
+  }
+</style>

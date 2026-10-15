@@ -148,6 +148,15 @@ const linksFor = (d: PersonData) =>
                 </div>
               </section>
             ))}
+
+            <p class="full-list">
+              Full list of members:{' '}
+              <LinkOrPlaceholder
+                link={LINKS.officialPage}
+                class="link"
+                label="University of Hull DAIM page"
+              />
+            </p>
           </>
         ) : (
           <div class="empty-state">
@@ -236,6 +245,14 @@ const linksFor = (d: PersonData) =>
     flex-wrap: wrap;
     gap: 0.9rem;
     font-size: 0.8125rem;
+  }
+
+  .full-list {
+    margin-top: 2.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    font-size: 0.9375rem;
+    color: var(--ink-2);
   }
 
   .empty-state {

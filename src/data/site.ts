@@ -50,6 +50,7 @@ const ALL_NAV: NavItem[] = [
   { label: 'Publications', href: '/publications' },
   { label: 'Reports', href: '/reports' },
   { label: 'Blogs', href: '/blogs' },
+  { label: 'Opportunities', href: '/opportunities' },
   { label: 'Team', href: '/team' },
 ];
 
@@ -99,6 +100,13 @@ export const LINKS = {
   contact: {
     label: 'DAIMenquiries@hull.ac.uk',
     href: 'mailto:DAIMenquiries@hull.ac.uk',
+  } satisfies ExternalLink,
+
+  /** Official course page for the MSc by Thesis and PhD, including the
+      entry requirements, start dates and the application form. */
+  researchDegrees: {
+    label: 'Data Science research degrees',
+    href: 'https://www.hull.ac.uk/study/postgraduate-research/courses/data-science-research-degrees',
   } satisfies ExternalLink,
 } as const;
 

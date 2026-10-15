@@ -2,11 +2,7 @@
 name: Dr Zekun Guo
 group: Centre member
 role: Lecturer and Research Lead
-# Photo removed from the repository while the card is hidden: Astro emits an
-# image() asset even when nothing renders it, so leaving the file here would
-# publish the photo. Put zekun-guo.jpg back beside this file and uncomment
-# this line to restore the card with its photo.
-# photo: ./zekun-guo.jpg
+photo: ./zekun-guo.jpg
 areas:
   - ai-for-engineering-science
   - frontier-ai
@@ -21,8 +17,6 @@ website: https://drzekunguo.github.io
 scholar: https://scholar.google.com/citations?user=xGCYwH8AAAAJ&hl=zh-CN
 github: https://github.com/drzekunguo
 linkedin: https://www.linkedin.com/in/zekun-guo-a428b3198/
-# Set to true (or delete this line) to show the card.
-listed: false
 order: 10
 ---
 
