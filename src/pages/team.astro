@@ -62,6 +62,7 @@ const linksFor = (d: PersonData) =>
     d.scholar ? { label: 'Scholar', href: d.scholar } : null,
     d.github ? { label: 'GitHub', href: d.github } : null,
     d.linkedin ? { label: 'LinkedIn', href: d.linkedin } : null,
+    d.researchgate ? { label: 'ResearchGate', href: d.researchgate } : null,
   ].filter((x): x is { label: string; href: string } => x !== null);
 
 ---

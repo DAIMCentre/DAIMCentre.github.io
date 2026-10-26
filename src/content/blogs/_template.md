@@ -5,7 +5,8 @@
 title: Post title
 description: One or two sentences. Shown on the index and used as the page description.
 date: 2026-09-01
-author: Your Name        # optional
+authors:                 # optional, one line per byline
+  - Your Name
 tags:                    # optional
   - Agentic AI
 draft: false             # true keeps it out of the build

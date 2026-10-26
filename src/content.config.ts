@@ -151,6 +151,7 @@ const team = defineCollection({
     scholar: z.string().url().optional(),
     github: z.string().url().optional(),
     linkedin: z.string().url().optional(),
+    researchgate: z.string().url().optional(),
     website: z.string().url().optional(),
     /** Set false to opt out without deleting the file. */
     listed: z.boolean().default(true),
@@ -171,7 +172,8 @@ const blogs = defineCollection({
       /** One or two sentences. Used on the index and for the page description. */
       description: z.string(),
       date: z.coerce.date(),
-      author: z.string().optional(),
+      /** One or more bylines, in the order they should be printed. */
+      authors: z.array(z.string()).default([]),
       tags: z.array(z.string()).default([]),
       /** Draft posts are excluded from the build. */
       draft: z.boolean().default(false),
@@ -189,8 +191,14 @@ const publications = defineCollection({
   loader: glob({ base: './src/content/publications', pattern }),
   schema: z.object({
     title: z.string(),
-    /** Full author list, in publication order. */
+    /** Author list, in publication order. May be truncated — see totalAuthors. */
     authors: z.array(z.string()).default([]),
+    /**
+     * The real number of authors, when `authors` lists only the first few.
+     * Large collaborations run to dozens of names; the page prints the ones
+     * listed and then "and N others" rather than the whole roll call.
+     */
+    totalAuthors: z.number().int().optional(),
     /**
      * Which of those names are DAIM-affiliated. Matched exactly against
      * `authors`, and shown in bold — the usual convention for a centre list.
@@ -255,9 +263,34 @@ const opportunities = defineCollection({
   }),
 });
 
+/**
+ * Guidance notes written by DAIM staff for students and researchers.
+ *
+ * These are an individual's notes, not University regulation. /guidance says
+ * so in the open, so nothing here can be mistaken for the module handbook.
+ */
+const guidance = defineCollection({
+  loader: glob({ base: './src/content/guidance', pattern }),
+  schema: z.object({
+    title: z.string(),
+    /** One or two sentences. Used on the index and for the page description. */
+    description: z.string(),
+    /** Bylines, in the order they should be printed. */
+    authors: z.array(z.string()).default([]),
+    /** Staff page for the first author, when there is one. */
+    authorUrl: z.string().url().optional(),
+    /** Who the note is written for, e.g. "MSc dissertation students". */
+    audience: z.string().optional(),
+    updated: z.coerce.date(),
+    order: z.number().default(100),
+    draft: z.boolean().default(false),
+  }),
+});
+
 export const collections = {
   projects,
   opportunities,
+  guidance,
   reports,
   seminars,
   paperClub,

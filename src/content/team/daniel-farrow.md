@@ -5,6 +5,8 @@ group: Centre member
 # requested on the form.
 role: Lecturer and Programme Director
 photo: ./daniel-farrow.jpg
+areas:
+  - physical-world-modelling
 topics:
   - Cosmology
   - Galaxy surveys

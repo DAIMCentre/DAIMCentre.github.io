@@ -38,7 +38,9 @@ const fmt = (d: Date) =>
                     <time datetime={post.data.date.toISOString()}>
                       {fmt(post.data.date)}
                     </time>
-                    {post.data.author && <span> · {post.data.author}</span>}
+                    {post.data.authors.length > 0 && (
+                      <span> · {post.data.authors.join(', ')}</span>
+                    )}
                   </p>
                   <h2 class="h-sub post__title">{post.data.title}</h2>
                   <p class="post__desc">{post.data.description}</p>

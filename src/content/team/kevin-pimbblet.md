@@ -3,6 +3,8 @@ name: Professor Kevin Pimbblet
 group: Centre lead
 role: Head of the School of Digital and Physical Sciences; Founding Director of DAIM
 # Summarised from the University staff profile.
+areas:
+  - physical-world-modelling
 topics:
   - Extragalactic astronomy
   - Cosmology

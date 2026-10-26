@@ -39,7 +39,11 @@ const fmt = (d: Date) =>
           <time datetime={post.data.date.toISOString()}>
             {fmt(post.data.date)}
           </time>
-          {post.data.author && <span> · {post.data.author}</span>}
+          {
+            post.data.authors.length > 0 && (
+              <span> · {post.data.authors.join(', ')}</span>
+            )
+          }
         </p>
 
         <h1 class="h-page post-title">{post.data.title}</h1>
@@ -154,9 +158,22 @@ const fmt = (d: Date) =>
   }
 
   .post-body :global(img) {
+    display: block;
     max-width: 100%;
     height: auto;
     border: 1px solid var(--rule);
+    margin-top: 1.75rem;
+  }
+
+  /* Captions are written as <p class="figcaption"> in the Markdown, so the
+     image above them stays a plain Markdown image and Astro still optimises
+     it. Pulled up tight against the figure it describes. */
+  .post-body :global(.figcaption) {
+    margin-top: 0.6rem;
+    margin-bottom: 1.75rem;
+    font-size: 0.8125rem;
+    color: var(--ink-3);
+    max-width: 68ch;
   }
 
   .post-body :global(a) {

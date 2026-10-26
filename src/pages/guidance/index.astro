@@ -1,0 +1,154 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHeader from '../../components/PageHeader.astro';
+
+const notes = (await getCollection('guidance'))
+  .filter((n) => !n.data.draft)
+  .sort(
+    (a, b) =>
+      a.data.order - b.data.order || a.data.title.localeCompare(b.data.title)
+  );
+
+const fmt = (d: Date) =>
+  new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(d);
+---
+
+<BaseLayout
+  title="Guidance"
+  description="Notes written by DAIM staff for students and researchers — how dissertations and supervision work, and where to get help."
+>
+  <PageHeader
+    eyebrow="Guidance"
+    title="Notes for students and researchers"
+    lede="Things DAIM staff have written down because they get asked often enough to be worth writing down."
+  />
+
+  <section class="section">
+    <div class="container">
+      {
+        notes.length > 0 ? (
+          <ul class="list-plain notes">
+            {notes.map((note, i) => (
+              <li class="note">
+                <p class="meta note__index">
+                  {String(i + 1).padStart(2, '0')}
+                </p>
+                <div class="note__body">
+                  <h2 class="h-section note__title">
+                    <a class="note__link" href={`/guidance/${note.id}`}>
+                      {note.data.title}
+                    </a>
+                  </h2>
+                  <p class="note__description">{note.data.description}</p>
+                  <p class="meta note__byline">
+                    {note.data.authors.join(', ')}
+                    {note.data.audience && (
+                      <span>
+                        {' · '}
+                        {note.data.audience}
+                      </span>
+                    )}
+                    <span>
+                      {' · '}Updated {fmt(note.data.updated)}
+                    </span>
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div class="empty-state">
+            <div class="prose">
+              <p>
+                Nothing here yet. Notes appear as staff write them.
+              </p>
+            </div>
+          </div>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="section section--alt section--ruled">
+    <div class="container"><div class="measure">
+      <h2 class="h-section">About these notes</h2>
+      <div class="prose stack-md" style="margin-top:1.25rem">
+        <p>
+          Each note is written by the member of staff named on it, in their own
+          words, for their own students. They describe how that person works —
+          what they expect, how they run supervision, what they will and will
+          not do in a meeting.
+        </p>
+        <p>
+          They are not University regulations. Canvas, the module handbook and
+          your own supervisor are the authoritative source for deadlines,
+          assessment weightings and anything that affects your marks. Where a
+          note and the handbook disagree, the handbook wins.
+        </p>
+      </div>
+    </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .note {
+    display: grid;
+    grid-template-columns: 3.5rem minmax(0, 1fr);
+    gap: clamp(0.75rem, 2vw, 1.5rem);
+    padding-block: 2rem;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .note:first-child {
+    padding-top: 0;
+  }
+
+  .note__index {
+    margin: 0;
+    color: var(--ink-4);
+  }
+
+  .note__title {
+    margin: 0;
+    max-width: 44ch;
+  }
+
+  .note__link {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .note__link:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .note__description {
+    margin: 0.65rem 0 0;
+    color: var(--ink-2);
+    max-width: 68ch;
+  }
+
+  .note__byline {
+    margin: 0.8rem 0 0;
+  }
+
+  .empty-state {
+    border: 1px dashed var(--rule-strong);
+    padding: clamp(1.75rem, 4vw, 2.75rem);
+    max-width: 62ch;
+  }
+
+  @media (max-width: 700px) {
+    .note {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 0.5rem;
+    }
+  }
+</style>

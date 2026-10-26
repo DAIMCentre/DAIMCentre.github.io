@@ -2,8 +2,9 @@
  * DAIM's research themes. Shared by the homepage grid and /research so the two
  * can never drift apart — edit here only.
  *
- * Structure: one methods theme (Frontier AI) followed by the domains it is put
- * to work in. The homepage renders the first entry full width to reflect that.
+ * Structure: one methods theme (Frontier AI), then the domains it is put to
+ * work in, then Physical World Modelling for the modelling that is not led by
+ * AI. The homepage renders the first entry full width to reflect that.
  *
  * `detail` is used on /research. It describes what we are interested in and
  * why. It makes no claim about specific results, funding or partnerships.
@@ -118,6 +119,26 @@ export const RESEARCH_AREAS: ResearchArea[] = [
       'Control',
       'Engineering Decision Intelligence',
       'Energy and Infrastructure',
+    ],
+  },
+  {
+    id: 'physical-world-modelling',
+    emoji: '🌌',
+    title: 'Physical World Modelling',
+    summary:
+      'Modelling physical systems on their own terms, from galaxies to power networks.',
+    detail: [
+      'Not everything DAIM models goes through machine learning. A good deal of it is the older kind of modelling: equations that describe how something actually behaves, solved numerically, and checked against observation or measurement.',
+      'The groups doing this have not had much reason to talk to each other. Astrochemical, galactic and cosmological modelling sits in one part of the centre; modelling of power and energy systems sits in another. The methods are different, but the difficulties rhyme — what resolution is worth its cost, which physics can be left out, and how far to trust a simulation you cannot validate directly.',
+      'This theme is the umbrella that brings those conversations into the same room. It is also where AI meets modelling from the other direction: not AI applied to a domain, but a physical model that an AI method might accelerate, calibrate or stand in for.',
+    ],
+    topics: [
+      'Astrochemical Modelling',
+      'Galaxy Formation',
+      'Cosmology',
+      'Power and Energy Systems',
+      'Numerical Simulation',
+      'Model Validation',
     ],
   },
 ];

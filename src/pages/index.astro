@@ -35,6 +35,7 @@ const contents = [
   { label: 'Projects', href: '/projects' },
   { label: 'Publications', href: '/publications' },
   { label: 'Opportunities', href: '/opportunities' },
+  { label: 'Guidance', href: '/guidance' },
   // Parked with the Reports section — see FEATURES in src/data/site.ts.
   ...(FEATURES.reports ? [{ label: 'Research reports', href: '/reports' }] : []),
 ];
@@ -117,7 +118,7 @@ const featuredLede =
         eyebrow="Research"
         emoji="🔬"
         title="Research"
-        lede="One theme for the methods, four for the domains we apply them in. They overlap, and the overlaps are where most of the interesting work happens."
+        lede="One theme for the methods, four for the domains we apply them in, and one for the modelling that is not led by AI. They overlap, and the overlaps are where most of the interesting work happens."
       />
 
       <div class="grid grid--hairline grid--4 themes">
@@ -496,6 +497,13 @@ const featuredLede =
      number of themes. :global() is needed because the card is rendered by a
      child component and so carries its own style scope. */
   .themes > :global(*:first-child) {
+    grid-column: 1 / -1;
+  }
+
+  /* The first card spans both columns, so the remaining cards pair up. When
+     the total is even the last one is left alone on its row — run it full
+     width instead of leaving a gap. */
+  .themes > :global(*:last-child:nth-child(even)) {
     grid-column: 1 / -1;
   }
 

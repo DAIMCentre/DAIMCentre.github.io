@@ -51,6 +51,7 @@ const ALL_NAV: NavItem[] = [
   { label: 'Reports', href: '/reports' },
   { label: 'Blogs', href: '/blogs' },
   { label: 'Opportunities', href: '/opportunities' },
+  { label: 'Guidance', href: '/guidance' },
   { label: 'Team', href: '/team' },
 ];
 

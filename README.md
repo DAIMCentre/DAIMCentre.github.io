@@ -25,12 +25,16 @@ it is doing now, and how mature it is. Currently DAIM Foundation Models
 Agents (evidence-grounded agents for reproducible research). The page is
 generated from the project files, so it only ever shows what exists.
 
-**Publications** — papers, conference contributions and preprints from
-researchers working with DAIM. Being compiled; nothing is imported
-automatically, so every entry is one a person has checked.
+**Publications** — papers from researchers working with DAIM, 2023 onwards.
+Built from each listed person's own ORCID record, with the bibliographic detail
+filled in from Crossref by DOI, and filterable by research theme.
 
 **Blogs** — shorter pieces from the research community: work in progress, method
 notes, reading, and thinking that is not yet a paper.
+
+**Guidance** — notes DAIM staff have written for students and researchers, each
+one credited to its author. They are not University regulation, and the page
+says so.
 
 **Opportunities** — PhD and MSc by Thesis projects supervisors are offering,
 each with the question it asks, what the student would need to bring, and who
@@ -46,7 +50,7 @@ authoritative record of membership, and the page links to it.
 ## Editing it
 
 Page text lives in Markdown under `src/content/` — one file per project,
-opportunity, publication, post or person. Each folder holds a `_template.md` documenting its
+opportunity, publication, guidance note, post or person. Each folder holds a `_template.md` documenting its
 fields: copy it, rename it without the leading underscore, and fill it in. Files
 starting with `_` are ignored, so templates never ship.
 

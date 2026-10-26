@@ -1,0 +1,150 @@
+---
+import type { CollectionEntry } from 'astro:content';
+import { getCollection, render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+
+export async function getStaticPaths() {
+  const notes = await getCollection('guidance');
+  return notes
+    .filter((n) => !n.data.draft)
+    .map((note) => ({ params: { slug: note.id }, props: { note } }));
+}
+
+interface Props {
+  note: CollectionEntry<'guidance'>;
+}
+
+const { note } = Astro.props;
+const { Content } = await render(note);
+
+const fmt = (d: Date) =>
+  new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(d);
+---
+
+<BaseLayout title={note.data.title} description={note.data.description}>
+  <article class="section">
+    <div class="container">
+      <div class="measure">
+        <p class="meta note-meta">
+          <a class="link-quiet" href="/guidance">Guidance</a>
+          <span aria-hidden="true"> · </span>
+          <time datetime={note.data.updated.toISOString()}>
+            Updated {fmt(note.data.updated)}
+          </time>
+        </p>
+
+        <h1 class="h-page note-title">{note.data.title}</h1>
+        <p class="lede note-lede">{note.data.description}</p>
+
+        <p class="note-byline">
+          Written by{' '}
+          {
+            note.data.authorUrl ? (
+              <a class="link" href={note.data.authorUrl} rel="noopener">
+                {note.data.authors.join(', ')}
+              </a>
+            ) : (
+              note.data.authors.join(', ')
+            )
+          }
+          {note.data.audience && <span> for {note.data.audience}</span>}.
+        </p>
+
+        {/* Said once, at the top, so nothing below can be mistaken for
+            University regulation. The note itself is left exactly as written. */}
+        <p class="note-caveat">
+          These are one member of staff's own notes for their own students, not
+          University regulations. Canvas, the module handbook and your
+          supervisor remain the authoritative source for deadlines, assessment
+          and anything affecting your marks.
+        </p>
+      </div>
+
+      <div class="measure prose note-body">
+        <Content />
+      </div>
+    </div>
+  </article>
+</BaseLayout>
+
+<style>
+  .note-meta {
+    margin: 0 0 1rem;
+  }
+
+  .note-title {
+    margin-bottom: 1.25rem;
+  }
+
+  .note-lede {
+    margin-bottom: 1.25rem;
+  }
+
+  .note-byline {
+    margin: 0 0 1.25rem;
+    color: var(--ink-2);
+    font-size: 0.9375rem;
+  }
+
+  .note-caveat {
+    margin: 0;
+    padding: 1rem 1.15rem;
+    border-left: 2px solid var(--rule-strong);
+    background: var(--paper-alt);
+    color: var(--ink-2);
+    font-size: 0.875rem;
+  }
+
+  .note-body {
+    margin-top: clamp(2rem, 4vw, 3rem);
+  }
+
+  /* The frontmatter title is the h1, so notes start at h2. */
+  .note-body :global(h2) {
+    font-family: var(--font-serif);
+    font-size: clamp(1.25rem, 1.1rem + 0.7vw, 1.5rem);
+    font-weight: 400;
+    line-height: 1.25;
+    margin-top: 2.5rem;
+    margin-bottom: 0.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--rule);
+  }
+
+  .note-body :global(h2:first-child) {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: 0;
+  }
+
+  .note-body :global(h3) {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    margin-top: 1.75rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .note-body :global(ul),
+  .note-body :global(ol) {
+    margin: 0 0 1.05rem 1.15rem;
+    color: var(--ink-2);
+  }
+
+  .note-body :global(li) {
+    margin-bottom: 0.35rem;
+  }
+
+  .note-body :global(a) {
+    color: var(--ink);
+    border-bottom: 1px solid var(--rule-strong);
+    text-decoration: none;
+  }
+
+  .note-body :global(a:hover) {
+    border-bottom-color: var(--ink);
+  }
+</style>
