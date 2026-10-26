@@ -128,9 +128,9 @@ export const RESEARCH_AREAS: ResearchArea[] = [
     summary:
       'Modelling physical systems on their own terms, from galaxies to power networks.',
     detail: [
-      'Not everything DAIM models goes through machine learning. A good deal of it is the older kind of modelling: equations that describe how something actually behaves, solved numerically, and checked against observation or measurement.',
-      'The groups doing this have not had much reason to talk to each other. Astrochemical, galactic and cosmological modelling sits in one part of the centre; modelling of power and energy systems sits in another. The methods are different, but the difficulties rhyme — what resolution is worth its cost, which physics can be left out, and how far to trust a simulation you cannot validate directly.',
-      'This theme is the umbrella that brings those conversations into the same room. It is also where AI meets modelling from the other direction: not AI applied to a domain, but a physical model that an AI method might accelerate, calibrate or stand in for.',
+      'Not everything DAIM models goes through machine learning. A good deal of it is built from first principles: equations that describe how something actually behaves, solved numerically, and checked against observation or measurement.',
+      'The work spans everything from interstellar chemistry to the behaviour of a power network: astrochemical, galactic and cosmological modelling in one part of the centre, power and energy systems modelling in another. What runs through all of it is the craft — judging what resolution is worth its cost, which physics can safely be left out, and how far to trust a simulation you cannot validate directly.',
+      'This theme gives that shared craft a home, so the people practising it can compare notes across the systems they model. It is also where AI meets modelling from the other direction: not AI applied to a domain, but a physical model that an AI method might accelerate, calibrate or stand in for.',
     ],
     topics: [
       'Astrochemical Modelling',
